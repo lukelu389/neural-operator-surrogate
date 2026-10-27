@@ -1,0 +1,119 @@
+# TODO: Neural Surrogates for Option Pricing and Calibration
+
+One ticket per session. Tick when the exit criteria in PLAN.md are met. Add handoff notes under each finished ticket.
+
+## Gate 0: Setup and pre-registration
+
+- [ ] T0.1 Repo scaffold, Makefile, `make check`, seed utilities
+  - Done when: `make check` passes from a clean clone
+  - Handoff notes:
+- [ ] T0.2 Reading notes (COS, Little Heston Trap, Deep Learning Volatility, Liu et al., FNO, DeepONet, S4/Mamba)
+  - Done when: one page per paper in docs/reading/
+  - Handoff notes:
+- [ ] T0.3 Draft eval_protocol.yaml, thresholds, OOD definitions
+  - Done when: committed, not yet frozen
+  - Handoff notes:
+
+
+
+## Gate 1: Ground truth validated and data frozen
+
+- [ ] T1.1 Black-Scholes closed form and Greeks
+  - Done when: unit tests (known values, parity) pass
+  - Handoff notes:
+- [ ] T1.2 Heston COS pricer (torch, batched)
+  - Done when: BS-limit test, put-call parity, convergence in N and range, Monte Carlo agreement within CI
+  - Handoff notes:
+- [ ] T1.3 IV inversion with failure mask
+  - Done when: roundtrip error below stated tolerance; failure fraction reported
+  - Handoff notes:
+- [ ] T1.4 Sampling, grids, splits, OOD sets, normalization, data card
+  - Done when: `make data` reproduces identical hashes
+  - Handoff notes:
+- [ ] T1.5 Freeze protocol v1 (hashes in frozen/)
+  - Done when: frozen files committed; stop rule on failure mask checked
+  - Handoff notes:
+
+
+
+## Gate 2: Baseline trained
+
+- [ ] T2.1 Training loop, logging, sanity tests (overfit 100 samples)
+  - Done when: sanity tests pass
+  - Handoff notes:
+- [ ] T2.2 M0 MLP with tuning budget, 3 seeds
+  - Done when: validation metrics, learning curve, error heatmaps; stop rule checked
+  - Handoff notes:
+
+
+
+## Gate 3: Architecture comparison
+
+- [ ] T3.1 M1 DeepONet-style (parameter count within 10% of M0, tests)
+  - Done when: trained with the same tuning budget
+  - Handoff notes:
+- [ ] T3.2 M2 Transformer
+  - Done when: trained with the same tuning budget
+  - Handoff notes:
+- [ ] T3.3 M3 SSM (bidirectional or two-pass, documented)
+  - Done when: trained with the same tuning budget
+  - Handoff notes:
+- [ ] T3.4 Freeze model configs; run final_eval once (test, OOD, data efficiency, 3 seeds)
+  - Done when: results table with mean and std; no retuning after this point
+  - Handoff notes:
+
+
+
+## Gate 4: Greeks, arbitrage, speed
+
+- [ ] T4.1 Greeks via autodiff vs COS finite differences
+  - Done when: error distributions reported
+  - Handoff notes:
+- [ ] T4.2 Arbitrage diagnostics (butterfly, calendar)
+  - Done when: violation rates and magnitudes reported
+  - Handoff notes:
+- [ ] T4.3 Speed benchmarks incl. vectorized GPU COS
+  - Done when: table with hardware details and honest discussion
+  - Handoff notes:
+
+
+
+## Gate 5: Calibration
+
+- [ ] T5.1 C0 classical calibration (COS plus least squares, multi-start)
+  - Done when: baseline success rate, error, time
+  - Handoff notes:
+- [ ] T5.2 C1 surrogate-based gradient calibration
+  - Done when: same metrics as C0
+  - Handoff notes:
+- [ ] T5.3 C2 inverse network (plus optional refinement)
+  - Done when: same metrics
+  - Handoff notes:
+- [ ] T5.4 Noise, missing quotes, held-out quotes, identifiability analysis
+  - Done when: comparison table and identifiability figure
+  - Handoff notes:
+
+
+
+## Gate 6 (optional): Track B payoff-to-price operator
+
+- [ ] T6.1 BS operator data with exact labels, cross-checked with Crank-Nicolson
+  - Handoff notes:
+- [ ] T6.2 FNO, DeepONet, Transformer, SSM
+  - Handoff notes:
+- [ ] T6.3 Resolution transfer, OOD payoffs, Greeks
+  - Handoff notes:
+
+
+
+## Gate 7: Write-up and release
+
+- [ ] T7.1 Report (6 to 8 pages)
+  - Handoff notes:
+- [ ] T7.2 README with headline table, key figure, `make reproduce`
+  - Handoff notes:
+- [ ] T7.3 Optional Streamlit demo
+  - Handoff notes:
+- [ ] T7.4 Final checks: clean-clone reproduction, no data or secrets committed, DEVIATIONS.md complete, citations verified
+  - Handoff notes:
+

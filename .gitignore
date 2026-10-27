@@ -1,0 +1,43 @@
+# Local Python environments and tooling
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+
+# Credentials and local editor/OS state
+.env
+.env.*
+!.env.example
+.DS_Store
+.idea/
+.vscode/
+.ipynb_checkpoints/
+
+# Generated research inputs and outputs: retain instructions and empty structure
+data/*
+!data/README.md
+checkpoints/
+artifacts/
+runs/
+mlruns/
+mlartifacts/
+reports/figures/*
+!reports/figures/.gitkeep
+reports/tables/*
+!reports/tables/.gitkeep
+*.pt
+*.pth
+*.ckpt
+*.npy
+*.npz
+*.parquet
+*.h5
+*.hdf5
