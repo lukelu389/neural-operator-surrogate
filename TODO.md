@@ -4,9 +4,14 @@ One ticket per session. Tick when the exit criteria in PLAN.md are met. Add hand
 
 ## Gate 0: Setup and pre-registration
 
-- [ ] T0.1 Repo scaffold, Makefile, `make check`, seed utilities
+- [x] T0.1 Repo scaffold, Makefile, `make check`, seed utilities
   - Done when: `make check` passes from a clean clone
   - Handoff notes:
+    - 2026-10-27: Added the installable `src/nop` scaffold, Make commands, deterministic Python/NumPy/PyTorch seeds and DataLoader worker seeding.
+    - Verified source commit `d11e4dd` from a clean local clone with a fresh virtual environment: Ruff formatting/lint, strict mypy (11 source files), and all 22 tests passed; the clone remained clean.
+    - Run: `python3 -m venv .venv`, `.venv/bin/python -m pip install -e '.[dev]'`, then `make check`; setup and limitations are in README.md.
+    - Verified on macOS arm64, Python 3.12.7, NumPy 2.5.4, PyTorch 2.14.1, pytest 9.2.0, Ruff 0.17.3, and mypy 1.20.2; GPU execution and Python 3.11 remain untested.
+    - Next: T0.2 reading notes. No open scope questions; data generation, final evaluation, and reproduction intentionally refuse until their tickets. No experiments or holdout access occurred.
 - [ ] T0.2 Reading notes (COS, Little Heston Trap, Deep Learning Volatility, Liu et al., FNO, DeepONet, S4/Mamba)
   - Done when: one page per paper in docs/reading/
   - Handoff notes:
