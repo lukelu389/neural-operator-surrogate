@@ -5,9 +5,11 @@ surrogates for synthetic Heston implied-volatility surfaces, then evaluate their
 use in calibration. Accuracy, tail errors, invalid quotes, arbitrage, Greeks,
 speed, and variability across seeds are part of the planned comparison.
 
-**Status: Gate 0, T0.1 scaffold. No pricer, dataset, trained model, or research
-result exists yet.** [PLAN.md](PLAN.md) defines the sequential gates;
-[TODO.md](TODO.md) records verified progress. Track B and the demo are optional.
+**Status: Gate 0, T0.1 scaffold and T0.2 reading notes. No pricer, dataset, trained
+model, or experimental result exists yet.** [PLAN.md](PLAN.md) defines the
+sequential gates; [TODO.md](TODO.md) records verified progress. Start with the
+[reading index](docs/reading/README.md) for the eight core papers and source
+limitations. T0.3 pre-registration is next. Track B and the demo are optional.
 
 ## Setup and verification
 

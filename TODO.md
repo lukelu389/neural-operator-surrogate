@@ -12,9 +12,14 @@ One ticket per session. Tick when the exit criteria in PLAN.md are met. Add hand
     - Run: `python3 -m venv .venv`, `.venv/bin/python -m pip install -e '.[dev]'`, then `make check`; setup and limitations are in README.md.
     - Verified on macOS arm64, Python 3.12.7, NumPy 2.5.4, PyTorch 2.14.1, pytest 9.2.0, Ruff 0.17.3, and mypy 1.20.2; GPU execution and Python 3.11 remain untested.
     - Next: T0.2 reading notes. No open scope questions; data generation, final evaluation, and reproduction intentionally refuse until their tickets. No experiments or holdout access occurred.
-- [ ] T0.2 Reading notes (COS, Little Heston Trap, Deep Learning Volatility, Liu et al., FNO, DeepONet, S4/Mamba)
+- [x] T0.2 Reading notes (COS, Little Heston Trap, Deep Learning Volatility, Liu et al., FNO, DeepONet, S4/Mamba)
   - Done when: one page per paper in docs/reading/
   - Handoff notes:
+    - 2026-10-28: Added eight approximately one-page notes with verified references, methods, actual comparisons, critical assessments, and source-access limits; start at docs/reading/README.md.
+    - Selected a bidirectional Mamba-style selective SSM direction for T3.3; no model/configuration, pricer, dataset, or protocol implementation was started.
+    - Verification: `make check` passed Ruff, strict mypy, and 22 tests; all relative Markdown links resolve. Reinstalled the existing editable package to repair a local hidden `.pth` import issue.
+    - Review by following each note's source/section links. No paper experiments were reproduced; the Heston manuscript/final-typesetting distinction and unavailable personal Poseidon notes are explicitly disclosed.
+    - T0.1 was pushed first to public lukelu389/neural-operator-surrogate. This stage is committed/pushed separately; next is T0.3 (draft protocol, thresholds, OOD definitions), which remains unchecked.
 - [ ] T0.3 Draft eval_protocol.yaml, thresholds, OOD definitions
   - Done when: committed, not yet frozen
   - Handoff notes:
