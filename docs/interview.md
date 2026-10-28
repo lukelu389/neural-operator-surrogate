@@ -65,3 +65,26 @@ must be reported as failures, not removed to improve accuracy. Compute metrics
 within each seed, then mean and sample standard deviation; pooling predictions
 or selecting a best seed conceals run variability. Validation-only later
 diagnostics must also disclose their model-selection exposure.
+
+## T1.1 — Black–Scholes prices and Greeks
+
+**Why is put–call parity insufficient to validate a pricer?** Both prices can
+share the same error and still satisfy their difference exactly, especially
+when one leg is reconstructed by parity. Check independent published prices
+and direct risk-neutral payoff integration as well. Parity remains useful for
+detecting dividend, discounting, and call/put sign mistakes.
+
+**What are the Greek conventions?** Delta/gamma differentiate spot once/twice.
+Vega and rho differentiate decimal volatility/rate, so multiplying by 0.01 gives
+the sensitivity to a percentage-point change. Theta is negative maturity
+derivative per year with spot and strike fixed. Finite differences and autodiff
+verify both signs and units, including nonzero dividends and negative rates.
+
+**How do you handle numerical tails and degenerate inputs?** Use `erfc` for
+normal lower tails and price the out-of-the-money leg before recovering its
+counterpart by parity. At expiry or zero volatility use exact limiting prices
+with safe unused regular branches. Reject analytic Greeks there because some
+derivatives are undefined or singular; finite precision can still underflow in
+extreme tails. Cancellation can also produce negative float32 prices at tiny
+total volatility; raise a numerical error rather than clipping, and use float64
+references. Do not claim arbitrary-precision accuracy.

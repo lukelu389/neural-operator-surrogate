@@ -33,9 +33,14 @@ One ticket per session. Tick when the exit criteria in PLAN.md are met. Add hand
 
 ## Gate 1: Ground truth validated and data frozen
 
-- [ ] T1.1 Black-Scholes closed form and Greeks
+- [x] T1.1 Black-Scholes closed form and Greeks
   - Done when: unit tests (known values, parity) pass
   - Handoff notes:
+    - 2026-10-28: Added broadcastable PyTorch European call/put pricing and analytic delta, gamma, vega, annual theta, and rho in src/nop/pricing/bs.py; README.md documents units and usage.
+    - Prices handle dividends, negative rates, expiry, and zero volatility. Greeks reject singular boundaries; invalid computed prices/nonfinite outputs raise numerical errors rather than being silently clipped.
+    - Verification: `make check` passed Ruff, strict mypy (12 source files), and 117 tests, including 95 Black–Scholes cases covering published values, independent payoff integration, parity, finite differences, autodiff, limits, and precision failures.
+    - Run the README example or `.venv/bin/python -m pytest tests/test_bs.py`; float64 is recommended for reference pricing. Verified on CPU; accelerator execution and extreme-tail relative accuracy remain unverified. The existing editable installation was repaired without dependency changes.
+    - Next: T1.2 Heston COS pricer with its required numerical validations. No Heston data generation, IV inversion, model training, holdout access, or protocol freeze occurred in T1.1.
 - [ ] T1.2 Heston COS pricer (torch, batched)
   - Done when: BS-limit test, put-call parity, convergence in N and range, Monte Carlo agreement within CI
   - Handoff notes:

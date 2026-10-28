@@ -49,3 +49,10 @@ The unresolved numerical choices are enumerated in
 `required_before_G1_freeze`. T0.3 completion is not permission to freeze this
 draft as-is. Any later approved change to frozen files must still record its
 reason, approval, and all results already seen.
+
+## 2026-10-28 — T1.1
+
+No protocol deviation. Implemented and tested the Black–Scholes reference pricer
+and analytic Greeks on explicit unit-test inputs. No Heston labels, datasets,
+training runs, or test/OOD experiment artifacts were generated or accessed.
+The draft evaluation protocol and all gate boundaries remain unchanged.

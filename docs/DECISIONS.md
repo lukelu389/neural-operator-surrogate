@@ -55,3 +55,22 @@
 - `make check` passed Ruff formatting/lint, strict mypy (11 source files), and 22 tests. Reinstalled the existing editable package using the previously documented local repair; no package dependency was added or upgraded.
 - Independent read-only protocol and numerical reviews found no blocker to the unfrozen draft; incorporated explicit C2 training provenance, condition-wise calibration success, derivative conventions, and M0 checkpoint scope.
 - No pricing labels, dataset samples, model results, holdout accesses, or frozen hashes were produced. Gate 1 remains unstarted.
+
+## 2026-10-28 — T1.1
+
+- Implement only Black–Scholes prices and analytic Greeks in `src/nop/pricing/bs.py`; preserve the one-ticket boundary before Heston COS, IV inversion, or data generation.
+- Use the existing PyTorch dependency so prices broadcast and retain first/second autodiff support alongside the planned batched Heston implementation; add no dependencies or experiment configuration changes.
+- Use float64 for scalar-only reference calculations, and require tensor inputs to share float32/float64 dtype and device so implicit conversions do not hide precision or device differences.
+- Evaluate normal lower tails with `erfc`, price the out-of-the-money leg directly, and recover the other leg by put–call parity to reduce tail cancellation.
+- Return exact expiry and zero-volatility prices with safe unused regular branches; reject analytic Greeks at these singular boundaries rather than inventing derivatives. Boundary price autodiff is outside the contract.
+- Define theta as calendar decay per year at fixed spot/strike, and vega/rho per decimal input unit, preventing time-sign and factor-of-100 ambiguities.
+- Validate against the pinned QuantLib v1.38 Haug fixtures, independent risk-neutral payoff integration, parity, finite differences, and autodiff rather than relying on parity alone or copying the implementation into expected values.
+- Keep experiment holdouts sealed and the protocol draft unchanged; these are numerical unit-test cases, not training labels or model-evaluation results.
+- A numerical review exposed negative float32 prices from cancellation at tiny total volatility; reject nonfinite outputs and negative prices with `FloatingPointError`, add regression coverage, and recommend float64 rather than silently clipping or changing computation precision.
+
+### Verification
+
+- `make check` passed Ruff formatting/lint, strict mypy (12 source files), and 117 tests, including 95 Black–Scholes cases. Repaired the existing editable installation immediately before this standard command; no test-path override, new dependency, or package upgrade was used for the final run.
+- Published four-decimal fixtures use absolute tolerance 1e-4. Separate risk-neutral payoff quadrature checks, including small OTM prices, use relative tolerance 2e-9 on the selected cases; these are case-specific checks, not a domain-wide accuracy guarantee.
+- Analytic Greeks match central finite differences and PyTorch first/second derivatives, including the forward-ATM parity branch. Explicit tests cover zero-time/zero-volatility limits, mixed batches, dividends, negative rates, float32/float64 broadcasting, cancellation errors, and overflow.
+- Verified on CPU with the existing Python 3.12.7 environment. Accelerator behavior is unverified; test/OOD experiment datasets remain untouched and no frozen manifest changed.
