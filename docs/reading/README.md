@@ -50,5 +50,5 @@ paper notes specified by T0.2.
 
 To review, open each note and follow its linked section/table references.
 `make check` verifies the existing software scaffold; it does not validate
-literature claims or reproduce the papers. T0.3 remains the next ticket, and
-the evaluation protocol is still undrafted and unfrozen.
+literature claims or reproduce the papers. T0.3 now records the
+[evaluation protocol draft](../../config/eval_protocol.yaml); it remains unfrozen.

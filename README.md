@@ -5,11 +5,15 @@ surrogates for synthetic Heston implied-volatility surfaces, then evaluate their
 use in calibration. Accuracy, tail errors, invalid quotes, arbitrage, Greeks,
 speed, and variability across seeds are part of the planned comparison.
 
-**Status: Gate 0, T0.1 scaffold and T0.2 reading notes. No pricer, dataset, trained
-model, or experimental result exists yet.** [PLAN.md](PLAN.md) defines the
+**Status: Gate 0 complete: scaffold, reading notes, and draft evaluation protocol.
+No pricer, dataset, trained model, or experimental result exists yet.**
+[PLAN.md](PLAN.md) defines the
 sequential gates; [TODO.md](TODO.md) records verified progress. Start with the
 [reading index](docs/reading/README.md) for the eight core papers and source
-limitations. T0.3 pre-registration is next. Track B and the demo are optional.
+limitations. The [protocol draft](config/eval_protocol.yaml) and its
+[design notes](config/README.md) specify targets, OOD recipes, and unresolved
+freeze requirements. Next is T1.1, Black–Scholes pricing and Greeks.
+Track B and the demo are optional.
 
 ## Setup and verification
 
@@ -62,7 +66,8 @@ Training and model selection must use training and validation data only.
 ## Layout
 
 - `src/nop/`: pricing, data, models, training, evaluation, and calibration modules.
-- `config/`: future experiment YAML files; `frozen/`: future frozen-file hashes.
+- `config/`: draft evaluation protocol and future experiment configurations;
+  `frozen/`: future frozen-file hashes.
 - `scripts/`: reproducible entry points; `tests/`: automated checks.
 - `docs/`: decisions, deviations, reading notes, and interview preparation.
 - `reports/`: future report, tables, and figures; `notebooks/`: figures only.
@@ -75,3 +80,8 @@ is differentiability, batched calibration and risk loops, and a template for
 models without closed-form pricers. Speed and accuracy improvements must be
 measured. Calibration will use synthetic surfaces; real-market performance and
 tradable profit are not claims of this project.
+
+The draft assigns later Greeks/arbitrage diagnostics and calibration to validation
+parameters to preserve the single final holdout pass. These will be labeled as
+validation analyses, not independent test evidence; the sequencing interpretation
+and its limits are recorded in [DEVIATIONS.md](docs/DEVIATIONS.md).

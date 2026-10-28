@@ -44,3 +44,24 @@ selective recurrence is not the paper's fused scan. Measure our implementation
 under the frozen protocol and report losses as well as wins. See the
 [neural-pricing](reading/04-neural-pricing-and-iv.md) and
 [Mamba](reading/08-mamba.md) notes.
+
+## T0.3 — Evaluation protocol draft
+
+**Why commit a draft before freezing the protocol?** Committing establishes the
+proposed metrics, targets, budgets, and OOD definitions before model outcomes can
+influence them. Gate 1 still needs validated pricer/IV tolerances, mask coverage,
+and complete numerical settings. A draft is not an enforceable freeze; the
+explicit checklist prevents unresolved settings from being mistaken for one.
+
+**What makes these datasets out of distribution?** The wider-parameter and
+corner recipes explicitly reject points inside the closed training box, so
+expanding a sampling range cannot quietly mix ID samples into the OOD score.
+Short-maturity OOD keeps ID parameters but evaluates unseen maturities. Report
+each set separately because these shifts test different generalization claims.
+
+**Why use a common failure mask and per-seed metrics?** A common reference mask
+keeps every model accountable for the same valid quotes. Invalid predictions
+must be reported as failures, not removed to improve accuracy. Compute metrics
+within each seed, then mean and sample standard deviation; pooling predictions
+or selecting a best seed conceals run variability. Validation-only later
+diagnostics must also disclose their model-selection exposure.

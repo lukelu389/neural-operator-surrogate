@@ -20,9 +20,14 @@ One ticket per session. Tick when the exit criteria in PLAN.md are met. Add hand
     - Verification: `make check` passed Ruff, strict mypy, and 22 tests; all relative Markdown links resolve. Reinstalled the existing editable package to repair a local hidden `.pth` import issue.
     - Review by following each note's source/section links. No paper experiments were reproduced; the Heston manuscript/final-typesetting distinction and unavailable personal Poseidon notes are explicitly disclosed.
     - T0.1 was pushed first to public lukelu389/neural-operator-surrogate. This stage is committed/pushed separately; next is T0.3 (draft protocol, thresholds, OOD definitions), which remains unchecked.
-- [ ] T0.3 Draft eval_protocol.yaml, thresholds, OOD definitions
+- [x] T0.3 Draft eval_protocol.yaml, thresholds, OOD definitions
   - Done when: committed, not yet frozen
   - Handoff notes:
+    - 2026-10-28: Added config/eval_protocol.yaml with ID targets, three explicit OOD recipes, seeds/budgets, common-mask and seed-aggregation rules, calibration scoring, and pre-freeze requirements; see config/README.md for interpretation.
+    - The protocol is a committed draft, not frozen or executable. No pricer, data, model, or numerical result was created; final evaluation still refuses to run.
+    - Verification: YAML duplicate-key and structural checks, units, split offsets, query partitions, and Markdown links passed; `make check` passed Ruff, strict mypy, and 22 tests after reinstalling the existing editable package.
+    - Recorded two sequencing interpretations in docs/DEVIATIONS.md: holdout recipes are frozen before final-only generation, and later diagnostics/calibration use explicitly labeled validation data rather than independent test evidence.
+    - Next: T1.1 Black–Scholes closed form and Greeks. Resolve the protocol's numerical/normalization/budget checklist before T1.5; no Gate 1 work was started in this ticket.
 
 
 

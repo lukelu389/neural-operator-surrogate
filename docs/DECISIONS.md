@@ -33,3 +33,25 @@
 - `make check` passed Ruff formatting/lint, strict mypy (11 source files), and all 22 tests after the local editable-install repair; no dependency was added or upgraded for T0.2.
 - All eight notes contain methods, reported claims/comparisons, and independent critical/project assessments; relative Markdown links resolve, and publication versions/source-access limits are disclosed.
 - No paper benchmark was reproduced, and no research data, model, frozen configuration, or test/OOD result was created or accessed.
+
+## 2026-10-28 — T0.3
+
+- Draft the evaluation protocol without implementing future tickets; retain `status: draft` and explicit freeze blockers rather than inventing validated numerical settings.
+- Adopt the plan's starting ID box, scaled grid, split sizes, and accuracy targets; do not impose Feller filtering, so the declared box is assessed with explicit numerical failure coverage.
+- Exclude the closed ID box from wider-parameter and corner OOD recipes; short-maturity OOD uses ID parameters at unseen maturities, keeping the source of distribution shift identifiable.
+- Use fixed Sobol recipes and split offsets; materialize only training/validation before Gate 3 and reserve holdout generation/read access for `final_eval.py`, following the stricter AGENTS.md rule.
+- Keep later diagnostics/calibration on validation and disclose selection exposure; this preserves ticket ordering and the single final holdout pass, with the tradeoff recorded in DEVIATIONS.md.
+- Select the target-assessed model on validation, compute metrics separately for all three seeds, then report mean and sample standard deviation; common reference masks and explicit prediction failures prevent selective scoring.
+- Declare 12 tuning trials per architecture including failed training trials, shared training seeds, and parameter counts within 10% of M0; exact search ranges and training caps remain pre-freeze requirements.
+- Use nested training subsets with their own normalization statistics for data efficiency; train and freeze every required run before the single final holdout evaluation.
+- Define query generalization as withheld strikes at known maturities; label M0's short-maturity total-variance extrapolation explicitly and treat nonpositive variance as failure.
+- Score every calibration method's recovered parameters with COS; separate observed noisy fit, latent surface error, and held-out-quote error so a surrogate cannot grade itself.
+- Quantify the plan's pre-freeze "few percent" failure-mask stop rule as 3% overall or at any maturity on training/validation; this is a draft choice with no observed failure rates.
+- Add no dependency for a descriptive YAML draft; syntax and structural checks use an already installed external PyYAML interpreter, while runtime parsing belongs to implementation tickets.
+
+### Verification
+
+- Parsed the YAML with PyYAML 6.0.1 from `/opt/anaconda3/bin/python`, rejecting duplicate keys; checked split offsets, range/grid ordering, query partitions, seeds, unit conversion, draft state, and local Markdown links. These checks do not establish future runtime enforcement.
+- `make check` passed Ruff formatting/lint, strict mypy (11 source files), and 22 tests. Reinstalled the existing editable package using the previously documented local repair; no package dependency was added or upgraded.
+- Independent read-only protocol and numerical reviews found no blocker to the unfrozen draft; incorporated explicit C2 training provenance, condition-wise calibration success, derivative conventions, and M0 checkpoint scope.
+- No pricing labels, dataset samples, model results, holdout accesses, or frozen hashes were produced. Gate 1 remains unstarted.

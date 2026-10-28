@@ -1,0 +1,254 @@
+# T0.3 draft. No data or model results have been observed. Not executable or frozen.
+protocol_version: 1
+status: draft
+track: A_synthetic_heston
+freeze_at: T1.5
+model_freeze_at: T3.4
+
+units:
+  maturity: years
+  implied_volatility: decimal
+  iv_error: vol_points
+  decimal_iv_per_vol_point: 0.01
+  spot: 1.0
+  rate: 0.02
+  dividend_yield: 0.0
+  forward: "F(T) = spot * exp((rate - dividend_yield) * T)"
+  log_moneyness: "k = log(K / F(T))"
+  scaled_moneyness: "k = z * 0.2 * sqrt(T)"
+
+# These are proposed recipes, not generated datasets. T1.4 data.yaml must agree.
+data_design:
+  parameter_order: [v0, kappa, theta, sigma, rho]
+  id_box:
+    v0: [0.01, 0.25]
+    kappa: [0.5, 5.0]
+    theta: [0.01, 0.25]
+    sigma: [0.1, 1.0]
+    rho: [-0.95, -0.1]
+  impose_feller_condition: false
+  sampler: scrambled_sobol
+  id_stream_seed: 1729
+  id_splits:
+    train: {offset: 0, count: 200000}
+    validation: {offset: 200000, count: 20000}
+    test: {offset: 220000, count: 20000}
+  main_grid:
+    maturity_year_fractions: [[1, 12], [2, 12], [3, 12], [6, 12], [9, 12], [1, 1], [3, 2], [2, 1]]
+    z_linspace: {start: -2.5, stop: 2.5, count: 15}
+    k_scale: 0.2
+    order: maturity_major_then_increasing_z
+  normalization_fit_split: train_only
+  target_normalization: per_grid_point_valid_training_quotes_only
+  ood_sets:
+    wider_parameters:
+      count: 20000
+      seed: 1730
+      grid: main_grid
+      inherit_box: id_box
+      override_box: {kappa: [0.1, 7.5], sigma: [0.1, 1.5]}
+      accept_if: "kappa < 0.5 or kappa > 5.0 or sigma > 1.0"
+    short_maturities:
+      count: 20000
+      seed: 1731
+      parameter_box: id_box
+      maturity_year_fractions: [[1, 52], [2, 52]]
+      z_grid: main_grid.z_linspace
+      k_scale: 0.2
+    parameter_corners:
+      count: 20000
+      seed: 1732
+      grid: main_grid
+      inherit_box: id_box
+      override_box: {kappa: [0.1, 0.5], sigma: [1.0, 1.5], rho: [-0.99, -0.95]}
+      accept_if: "kappa < 0.5 or sigma > 1.0 or rho < -0.95"
+  rejection_sampling: keep_first_accepted_in_sobol_order_no_reseeding
+
+holdout_access:
+  sole_reader_and_materializer: scripts/final_eval.py
+  earliest_gate: T3.4
+  gate1_materialization: train_and_validation_only
+  gate1_holdout_artifacts: frozen_recipes_offsets_and_seeds_only
+  verify_before_any_holdout_generation_or_read:
+    - data_config_hash
+    - evaluation_protocol_hash
+    - all_selected_model_config_hashes
+    - all_final_checkpoint_hashes
+  final_holdout_passes: 1
+  later_invocations: return_cached_reports_without_reopening_holdouts
+  after_final_evaluation: no_retuning_post_hoc_work_separately_labeled
+  failure_or_partial_run: stop_log_access_and_seek_resolution_no_silent_restart
+  gate4_and_gate5_data: validation_only_clearly_labeled_not_independent_test_results
+
+fairness:
+  model_ids: [M0, M1, M2, M3]
+  nominal_parameters: 1000000
+  max_relative_parameter_difference_from_M0: 0.10
+  enforce_parameter_budget_with_unit_test: true
+  final_training_seeds: [11, 29, 47]
+  tuning_seed: 101
+  tuning_trials_per_architecture: 12
+  count_failed_training_trials: true
+  optimizer_family: AdamW
+  schedule_family: cosine_with_warmup
+  gradient_clipping: required
+  headline_loss: masked_MSE_on_standardized_IV
+  loss_ablation: vega_weighted_predeclared_before_freeze
+  shared_data_masks_and_train_budget: true
+  early_stopping_split: validation
+  selection_metric: validation_MAE_vol_points
+  selection_tie_breaks: [validation_p99_abs_error, lower_parameter_count, lexical_config_id]
+  best_model: validation_selected_architecture_never_best_test_score_or_seed
+  calibration_surrogate_selection: validation_only_before_T3.4
+
+accuracy:
+  error: "100 * (predicted_IV_decimal - reference_IV_decimal)"
+  metrics: [mean_absolute_error, root_mean_squared_error, p99_absolute_error, max_absolute_error]
+  quote_weighting: uniform_over_reference_valid_quotes
+  quantile_method: linear
+  strata: [overall, each_maturity, each_scaled_z_index, each_maturity_z_pair]
+  label_strata_with: [T_years, z, k]
+  evaluate_splits: [test, wider_parameters, short_maturities, parameter_corners]
+  seed_aggregation: compute_metrics_per_seed_then_arithmetic_mean_and_sample_std
+  std_ddof: 1
+  report_all_seeds: true
+  empty_stratum: undefined_with_zero_count_never_zero_error
+  reference_mask: same_pricer_and_IV_failure_mask_for_every_model
+  reference_coverage: counts_and_failure_fractions_overall_and_per_stratum
+  invalid_predictions: nonfinite_or_nonpositive_IV
+  prediction_failure_policy: report_count_and_rate_mark_affected_metrics_undefined_no_dropping
+  failed_seed_policy: fail_target_assessment_no_complete_case_seed_average
+
+targets:
+  # Apply to the validation-selected model's across-seed mean metric on ID test.
+  id_mean_absolute_error_vol_points_max: 0.05
+  id_p99_absolute_error_vol_points_max: 0.3
+  calibration_success: each_surrogate_method_at_least_C0_in_every_noise_and_missingness_condition
+  greek_error_target: null
+  arbitrage_violation_target: null
+  missing_target: report_failure_do_not_change_thresholds
+
+data_efficiency:
+  training_sizes: [5000, 20000, 50000, 200000]
+  subset_rule: nested_prefixes_of_the_same_training_split
+  configs: reuse_validation_selected_full_data_config_no_extra_tuning
+  seeds: fairness.final_training_seeds
+  normalization: fit_only_the_training_subset_used_by_each_run
+  checkpoints: train_and_freeze_all_sizes_before_the_single_final_holdout_pass
+
+query_generalization:
+  experiment: separate_subset_quote_training_with_no_additional_tuning
+  training_maturity_indices: [0, 1, 2, 3, 4, 5, 6, 7]
+  training_z_indices: [0, 2, 4, 6, 8, 10, 12, 14]
+  evaluation_z_indices: [1, 3, 5, 7, 9, 11, 13]
+  interpretation: held_out_strike_coordinates_at_known_maturities
+  unseen_maturities: reported_separately_in_short_maturities_OOD
+  labels_for_held_out_quotes: never_used_in_training_loss_or_normalization
+  model_comparison: M1_M2_M3_against_M0_with_spline_adapter
+  checkpoints: train_and_freeze_before_final_holdout_pass
+  off_grid_target_normalization: unresolved_before_G1_freeze_no_holdout_statistics
+  M0_adapter:
+    headline_short_maturity_checkpoint: full_grid_headline_M0_for_each_seed
+    held_out_strike_checkpoint: separate_subset_quote_M0_for_each_seed
+    input: inverse_normalized_positive_IV
+    interpolated_quantity: "w = T * IV^2"
+    strike_method: natural_cubic_spline_in_k_per_native_maturity
+    strike_extrapolation: forbidden
+    short_maturity_method: linear_w_extrapolation_in_T_from_first_two_native_maturities_at_fixed_k
+    output: "IV = sqrt(w / T)"
+    nonpositive_w: prediction_failure_no_clipping
+    report_short_maturity_name: M0_plus_extrapolation
+
+diagnostics:
+  split: validation
+  greek_sensitivities:
+    target: IV_derivatives
+    report_label: IV_sensitivities_not_conventional_option_price_Greeks
+    parameter_derivatives: [v0, kappa, theta, sigma, rho]
+    coordinate_derivatives: [k, T]
+    maturity_derivative: fixed_forward_log_moneyness_k_and_fixed_parameters
+    other_derivatives: hold_other_parameters_and_coordinates_fixed
+    coordinate_models: [M1, M2, M3]
+    reference: finite_differences_of_validated_COS_plus_IV_inversion
+    report: absolute_error_distributions_and_valid_stencil_coverage
+  arbitrage:
+    butterfly: successive_call_price_strike_slopes_must_be_nondecreasing
+    calendar: total_variance_must_be_nondecreasing_in_T_at_fixed_k
+    calendar_interpolation: piecewise_linear_total_variance_in_k
+    calendar_domain: intersection_of_native_k_supports_no_extrapolation
+    calendar_common_k_points: 15
+    report: rates_magnitudes_valid_check_counts_and_excluded_coverage
+  speed:
+    batches: [1, 256, 8192]
+    devices: [CPU, GPU]
+    baselines: [single_thread_numpy_COS, vectorized_torch_GPU_COS]
+    tasks: [parameters_to_IV_surface_end_to_end, COS_price_only_separately_labeled]
+    dtype_comparisons: [float32, float64]
+    ratios: same_task_same_batch_same_device_same_dtype_only
+    baseline_accuracy: must_meet_frozen_pricer_and_IV_tolerances_in_that_dtype
+    unsupported_hardware_or_precision: report_unavailable_no_substitution
+    warmup_calls: 10
+    measured_calls: 30
+    synchronize_accelerator: true
+    input_residency: already_on_device
+    include: normalization_inference_and_inverse_normalization_or_pricing_plus_IV_inversion
+    report: latency_distribution_surfaces_per_second_hardware_versions_threads_precision_and_transfer_exclusion
+
+calibration:
+  split: validation_not_independent_test
+  methods: [C0_COS_least_squares, C1_surrogate_autodiff, C2_inverse_network]
+  C2_training_data_and_normalization: training_surfaces_only
+  C2_refinement: optional_separately_labeled_not_merged_with_C2_results
+  noise_std_vol_points: [0.0, 0.1, 0.3]
+  noise_distribution: additive_Gaussian_IV_no_silent_clipping
+  missing_quote_fractions: [0.0, 0.2]
+  paired_experiment_seeds: [211, 223, 227]
+  C0_C1_starts_per_surface: 8
+  identical_across_methods: [surface_ids, noise_draws, quote_masks, parameter_bounds]
+  identical_across_C0_C1: [start_vectors, start_budget]
+  scoring_pricer: validated_COS_for_all_recovered_parameters
+  observed_fit_metric: RMSE_vol_points_on_observed_valid_quotes
+  noiseless_fit_tolerance_vol_points: 0.05
+  noisy_fit_tolerance: "sqrt(noiseless_fit_tolerance_vol_points^2 + noise_std_vol_points^2)"
+  success_requires:
+    - finite_recovered_parameters_within_shared_bounds
+    - no_optimizer_or_COS_or_IV_inversion_failure_on_scored_quotes
+    - COS_observed_fit_RMSE_less_than_or_equal_to_noisy_fit_tolerance
+  target_comparison: across_seed_mean_success_rate_per_noise_and_missingness_condition
+  failure_denominator: all_attempted_surfaces_including_optimizer_and_pricing_failures
+  report:
+    - success_rate_and_counts
+    - observed_quote_fit_error
+    - latent_noiseless_full_surface_error
+    - held_out_quote_error_disjoint_from_fitting_quotes
+    - parameter_RMSE_normalized_by_ID_box_widths
+    - wall_time_function_and_gradient_evaluation_counts
+    - across_seed_mean_and_sample_std
+  identifiability: compare_parameter_distance_and_COS_surface_distance_on_same_cases
+
+stop_rules:
+  invalid_reference_fraction_max_before_freeze: 0.03
+  invalid_reference_scope: train_and_validation_overall_and_each_maturity
+  invalid_reference_action: revisit_grid_or_numerics_before_freeze_no_holdout_inspection
+  M0_validation_MAE_vol_points_max: 0.2
+  M0_failure_action: stop_before_other_architectures_debug_data_and_normalization
+  calibration_region_disagreement: investigate_local_surrogate_and_Jacobian_error_before_conclusions
+  GPU_baseline_unavailable: Gate4_speed_exit_incomplete_report_missing_hardware
+  frozen_file_change: stop_obtain_user_approval_and_log_results_already_seen
+
+# Freeze is blocked until these details are numerical, reviewed, and committed.
+required_before_G1_freeze:
+  - validated_COS_truncation_terms_precision_and_IV_tolerances_in_data_yaml
+  - failure_mask_stop_rule_checked_on_train_and_validation_only
+  - data_yaml_agrees_with_split_recipes_ranges_grids_seeds_and_counts_above
+  - shared_tuning_search_ranges_training_cap_warmup_clipping_early_stopping_and_loss_ablation
+  - train_only_off_grid_normalization_and_M0_adapter_validated_without_test_or_OOD_access
+  - Greek_finite_difference_steps_and_arbitrage_numerical_tolerances
+  - calibration_surface_ids_quote_partitions_training_and_experiment_seed_pairing_solver_caps_and_C2_training_budget
+  - resolve_any_requested_change_to_lazy_holdouts_or_validation_only_later_diagnostics
+
+artifact_metadata:
+  required: [seed, config_hashes, code_commit, dataset_or_recipe_hash, package_versions, hardware]
+  generated_data_and_checkpoints_in_git: false
+  results: all_models_all_seeds_tail_errors_failures_and_negative_findings
+  market_performance_claims: forbidden_synthetic_only
