@@ -109,3 +109,26 @@ case. The interval does not include timestep bias. Use step refinement and
 compute standard errors from independent antithetic pair means, not individual
 correlated paths. Preserve failed checks and their settings; increasing numerical
 effort is different from retrying seeds or widening intervals until a test passes.
+
+## T1.3 — IV inversion and failure masks
+
+**Why use bisection rather than ordinary Newton iteration?** For a valid quote
+and positive maturity, the Black–Scholes price increases with volatility.
+A verified finite bracket therefore supports deterministic interval reduction.
+Newton divides by vega and can leave the admissible interval or take enormous
+steps when vega is small. Bisection costs more evaluations but has a simple
+failure contract; require both price residual and interval width to converge.
+
+**Does an accurate price roundtrip imply an accurate Heston IV label?** No.
+It verifies inversion of the supplied price. Source-pricer error remains, and
+its first-order effect on IV is price error divided by vega. Near-zero time
+value or small vega makes this inversion poorly conditioned. Report numerical
+convergence, mask coverage, and source-price uncertainty separately rather than
+using a small solver residual as evidence of accurate ground truth.
+
+**Why retain invalid quotes instead of dropping them?** Dropping them silently
+changes the sampled problem and can hide errors in difficult regions. Keep the
+full shape, explicit reason codes, and NaN IVs; use the common reference mask
+for every model. Report all attempted quotes in the denominator, including
+upstream pricing failures, with maturity/moneyness breakdowns. Deterministic
+corner-fixture failure fractions are stress diagnostics, not population rates.

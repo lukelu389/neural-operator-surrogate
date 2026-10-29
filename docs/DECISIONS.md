@@ -93,3 +93,22 @@
 - The configured convergence study passed at N=4096/L=28 versus N=8192/L=36: maximum absolute discrepancy 8.72e-11 across 12 spot=1 quotes, below 1e-8. Width and term sweeps are both retained in the generated report.
 - Both 200,000-pair fine-step estimates contain COS in nominal 95% sampling intervals; 1024-to-2048-step differences pass the combined-SE check. Methods, exact settings, values, and limitations are in docs/heston-validation.md.
 - CPU float64 study on macOS arm64, Python 3.12.7, NumPy 2.5.4, PyTorch 2.14.1, PyYAML 6.0.3. No data split or research holdout was generated/read; no frozen configuration changed.
+
+## 2026-10-28 — T1.3
+
+- Use bounded bisection with both residual and IV-width convergence: this preserves a simple root-finding contract when Newton's vega denominator is small; add no dependency.
+- Require explicit numerical settings and retain per-quote status, NaN failed IVs, iterations, signed residual, and available vega so a failure never silently removes a difficult quote.
+- Normalize tolerances and vega by max(discounted spot, discounted strike), making relative-only settings invariant to currency scale; strictly reject out-of-bound prices rather than clipping within tolerance.
+- Mask expiry and prices near either static bound because usable IV is unidentified or poorly conditioned there; reject converged roots below the declared normalized-vega floor.
+- Reuse existing public BS price/Greek functions with a per-quote fallback on rare batch arithmetic failures, avoiding formula duplication and keeping healthy neighbors usable.
+- Detach inversion outputs because bisection branches do not provide the correct implicit IV derivative; preserve the existing differentiable pricing APIs unchanged.
+- Validate 32 box corners plus the center on the full grid for both option types; retain upstream COS failures in all 7,920 attempted-quote denominators, without sampling research splits.
+- Keep the original COS resolutions and IV thresholds after observing failures: the study reports numerical limitations instead of tuning them away or implying a passed roundtrip certifies source prices.
+- Treat source-price convergence and training/validation mask coverage as unresolved pre-production/pre-freeze requirements; the corner study's 6.11% stress rate is not the population rate used by the draft stop check.
+
+### Verification
+
+- `make check` passed Ruff formatting/lint, strict mypy (17 source files), and 346 tests, with one CUDA check skipped for absent hardware. The 69 IV checks cover recovery, masks, bounds, scale/dtype behavior, numerical isolation, and convergence; the local editable-install repair added no dependency.
+- All 7,436 accepted fixtures repriced within 1e-10 times scale; normalized roundtrip p99/max were 2.8712245e-11/3.9618718e-11. All 484 failures remain reported, including 92 upstream COS failures; cache reuse and denominator totals were verified.
+- Across 7,824 comparable quotes, selected/finer COS price differences have p99/max 1.1055590e-6/2.3415801e-6; 308 accepted quotes exceed 1e-8. These are unresolved source-price findings, not inversion failures or experimental performance claims.
+- CPU float64, macOS arm64, Python 3.12.7, NumPy 2.5.4, PyTorch 2.14.1, PyYAML 6.0.3; complete methods and coverage are in docs/iv-validation.md. No dataset, model, frozen manifest, or holdout changed.

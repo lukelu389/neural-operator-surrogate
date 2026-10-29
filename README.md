@@ -5,14 +5,16 @@ surrogates for synthetic Heston implied-volatility surfaces, then evaluate their
 use in calibration. Accuracy, tail errors, invalid quotes, arbitrage, Greeks,
 speed, and variability across seeds are part of the planned comparison.
 
-**Status: Gate 0 complete; T1.1–T1.2 Black–Scholes and Heston COS numerical checks complete.
+**Status: Gate 0 complete; T1.1–T1.3 pricing and IV inversion checks complete.
 No Heston dataset, trained model, or experimental benchmark result exists yet.**
+The corner study exposes remaining COS accuracy and coverage issues, recorded
+in the [IV validation notes](docs/iv-validation.md).
 [PLAN.md](PLAN.md) defines the
 sequential gates; [TODO.md](TODO.md) records verified progress. Start with the
 [reading index](docs/reading/README.md) for the eight core papers and source
 limitations. The [protocol draft](config/eval_protocol.yaml) and its
 [design notes](config/README.md) specify targets, OOD recipes, and unresolved
-freeze requirements. Next is T1.3, IV inversion with explicit failure masks.
+freeze requirements. Next is T1.4, reproducible training/validation data and masks.
 Track B and the demo are optional.
 
 ## Setup and verification
@@ -71,7 +73,7 @@ independent payoff integration, dividend-adjusted parity, finite differences,
 and first/second autodiff checks. Greek conventions were cross-checked against
 [QuantLib's implementation](https://github.com/lballabio/QuantLib/blob/v1.38/ql/pricingengines/blackcalculator.cpp).
 These verify Black–Scholes behavior on the tested cases. Heston checks are
-documented below; IV inversion and accelerator verification remain pending.
+documented below; accelerator verification remains pending.
 
 ## Heston COS pricing
 
@@ -83,8 +85,18 @@ log-return cumulants, and European call/put prices. Choose `n_terms` and
 from nop.pricing.heston_cos import heston_cos_price
 
 price = heston_cos_price(
-    1.0, 1.0, 1.0, 0.04, 1.5, 0.04, 0.3, -0.7,
-    rate=0.02, dividend_yield=0.01, n_terms=4096, truncation_width=28.0,
+    1.0,
+    1.0,
+    1.0,
+    0.04,
+    1.5,
+    0.04,
+    0.3,
+    -0.7,
+    rate=0.02,
+    dividend_yield=0.01,
+    n_terms=4096,
+    truncation_width=28.0,
 )
 ```
 
@@ -95,6 +107,41 @@ convergence and independent Monte Carlo checks; matching results are cached.
 [Validation notes](docs/heston-validation.md) record methods, observed results,
 the failed initial MC run, and limits. Passing those fixtures does not certify
 all future labels or IV errors. No experiment configuration is frozen yet.
+
+## Implied volatility and failure masks
+
+`nop.pricing.iv.implied_volatility` uses bounded bisection with an explicit
+numerical policy. For a single quote:
+
+```python
+from nop.pricing.iv import IVSettings, implied_volatility
+
+settings = IVSettings(
+    price_atol=0.0,
+    price_rtol=1e-10,
+    iv_atol=1e-10,
+    min_normalized_vega=1e-4,
+    volatility_upper=5.0,
+    max_iterations=100,
+)
+result = implied_volatility(10.450583572185565, 100.0, 100.0, 1.0, 0.05, settings=settings)
+print(result.volatility.item())  # approximately 0.2 decimal IV
+print(result.valid.item(), result.status.item())  # True, 0 (SUCCESS)
+```
+
+Calls and puts broadcast with the pricing API's dtype/device rules. Failed
+quotes remain in place with `NaN` IV and an `IVStatus` reason. `valid`/`failed`
+are complementary masks; `iterations`, signed `price_residual`, and `vega`
+retain available diagnostics. Bounds, expiry, a missing bracket, low vega,
+iteration exhaustion, and numerical errors are explicit outcomes. Prices and
+IVs are never silently clipped. Inversion is detached and has no autograd contract.
+
+Run `.venv/bin/python scripts/validate_iv.py` for the cached, YAML-configured
+corner/center study, or `.venv/bin/python -m pytest tests/test_iv.py` for focused
+tests. [IV validation notes](docs/iv-validation.md) define tolerances, mask
+coverage, measured roundtrip errors, and limitations. A good roundtrip verifies
+inversion of the supplied price; it does not certify that price's accuracy.
+The settings above are numerical-study choices, not frozen production defaults.
 
 ## Reproducible randomness
 

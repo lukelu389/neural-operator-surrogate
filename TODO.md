@@ -49,9 +49,14 @@ One ticket per session. Tick when the exit criteria in PLAN.md are met. Add hand
     - Run `.venv/bin/python scripts/validate_heston.py`; config/heston_numerics.yaml and docs/heston-validation.md record the cached numerical study. Selected N=4096/L=28 differed from N=8192/L=36 by at most 8.72e-11 across 12 spot=1 quotes.
     - Both 200,000-pair, 2048-step MC intervals contained COS at nominal 95%; refinement checks passed. The initial smaller run failed and is disclosed in docs/DEVIATIONS.md. Sampling intervals exclude timestep bias; these fixtures do not certify every future IV label.
     - Next: T1.3 robust IV inversion and explicit failure masks. No training/validation/holdout datasets or frozen hashes were created; GPU execution remains unverified. PyYAML and its typing stubs were added for the required YAML-configured study.
-- [ ] T1.3 IV inversion with failure mask
+- [x] T1.3 IV inversion with failure mask
   - Done when: roundtrip error below stated tolerance; failure fraction reported
   - Handoff notes:
+    - 2026-10-28: Added bounded batched BS IV inversion, explicit status/NaN masks, residual/vega diagnostics, and 69 focused tests; no existing pricing implementation or dependency changed.
+    - Run `.venv/bin/python scripts/validate_iv.py` for the cached YAML-configured corner/center study. Of 7,920 attempts, 7,436 pass; 484 fail (6.1111%), including upstream COS failures. Accepted normalized roundtrip p99/max are 2.872e-11/3.962e-11, below 1e-10.
+    - `make check` passed Ruff, strict mypy (17 source files), and 346 tests; one CUDA check was skipped. Cache reuse and report denominators passed; the existing editable installation was repaired without dependency changes.
+    - COS selected/finer-resolution differences reach 2.342e-6 times price scale; 308 accepted quotes exceed 1e-8. See docs/iv-validation.md and docs/DEVIATIONS.md. A successful roundtrip does not certify Heston label accuracy, and these settings must not be frozen as-is.
+    - Next T1.4 must first investigate source-price convergence before generating production labels, then measure actual training/validation mask coverage before T1.5's stop check. No research split or holdout was created/read; the 6.11% deterministic stress rate is not a population estimate.
 - [ ] T1.4 Sampling, grids, splits, OOD sets, normalization, data card
   - Done when: `make data` reproduces identical hashes
   - Handoff notes:

@@ -86,3 +86,35 @@ Sampling uncertainty and timestep bias remain distinct. Sequential numerical
 refinement and these few fixtures do not establish uniform accuracy, simultaneous
 95% coverage, or production IV-label validity. No Heston dataset was generated,
 and T1.3/T1.4 requirements remain pending.
+
+## 2026-10-28 — T1.3 wider numerical coverage exposes COS limitations
+
+No frozen-protocol change or threshold adjustment. The deterministic study
+expanded numerical coverage from the 12 T1.2 quotes to 32 ID-box corners plus
+the arithmetic center, each with the full 8×15 grid and both option types.
+This is not a research split. Selected COS N=4096/L=28 and comparison
+N=8192/L=36 were retained unchanged, as were the initial IV settings.
+
+Observed before any future refinement: 484/7,920 attempts failed (6.1111%):
+208 low-vega, 92 near-lower-bound, 92 out-of-bounds, and 92 upstream COS failures.
+The finer COS evaluation failed on 72 quotes, recorded separately. On 7,824
+comparable quotes, normalized selected/finer price discrepancy had p99
+1.1055590266203016e-6 and maximum 2.341580127428189e-6. Of the 7,436 accepted
+IVs, 308 came from prices with discrepancy above 1e-8 times scale. All accepted
+price roundtrips still passed 1e-10, with maximum 3.961871802848904e-11.
+
+The T1.2 fixture tolerance does not hold uniformly across this expanded box;
+the finer resolution is not exact ground truth either. T1.3 completes the IV
+solver and its roundtrip/mask exit criterion, not domain-wide source-pricer
+validation. Before T1.4 produces production labels, investigate these source
+errors and validate a price/IV accuracy policy. Do not freeze the current
+settings as-is or relax masks/grid limits without recording the reason and
+these already-seen results. No pricer settings were retuned in this ticket.
+
+The 6.11% corner-stress failure fraction exceeds the draft 3% numerical value,
+but it is not an estimate on training/validation data, to which that stop check
+applies. Neither production coverage nor the T1.5 stop check has passed.
+The full report is retained locally in `reports/tables/iv_validation.json`;
+its reproducible config hash is
+`cfc93551d31a7665d3e4601d27f605567b5aff07888374f004a37f6b33f92a7c`.
+No training, validation, test, or OOD data was generated or accessed.

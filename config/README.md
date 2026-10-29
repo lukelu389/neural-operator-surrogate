@@ -12,6 +12,12 @@ not experiment splits or frozen data-production settings. Run it with
 `.venv/bin/python scripts/validate_heston.py`; see the
 [validation record](../docs/heston-validation.md) for results and limits.
 
+[iv_numerics.yaml](iv_numerics.yaml) configures T1.3's deterministic box-corner
+and center diagnostic, including both calls and puts. Run
+`.venv/bin/python scripts/validate_iv.py`; the [IV validation record](../docs/iv-validation.md)
+reports masks, price roundtrips, and selected/reference COS discrepancies.
+This is a numerical study, not a training/validation sample or frozen IV policy.
+
 T1.4 will create `data.yaml`; T1.5 will freeze it and this protocol only after the
 `required_before_G1_freeze` list is resolved. Model configurations and selected
 checkpoints are frozen at T3.4. No test/OOD data may inform these choices.
@@ -47,8 +53,8 @@ z and maturity. Calendar comparisons hold k fixed, not the z index.
 
 The wider and corner sets need not be mutually disjoint; each is reported
 separately. Rejection retains the first accepted Sobol points without reseeding.
-Seeds and offsets specify recipes, not existing datasets. No reference quote
-failure rate has been measured. The proposed Gate 1 stop threshold is 3% overall
+Seeds and offsets specify recipes, not existing datasets. No training/validation
+reference failure rate has been measured. The proposed Gate 1 stop threshold is 3% overall
 or at any maturity on training/validation data.
 
 For query generalization, train on alternating strike coordinates at every native
