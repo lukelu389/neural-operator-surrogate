@@ -56,3 +56,33 @@ No protocol deviation. Implemented and tested the Black–Scholes reference pric
 and analytic Greeks on explicit unit-test inputs. No Heston labels, datasets,
 training runs, or test/OOD experiment artifacts were generated or accessed.
 The draft evaluation protocol and all gate boundaries remain unchanged.
+
+## 2026-10-28 — T1.2 numerical refinement before freeze
+
+No frozen-protocol change. T1.2 used explicit numerical fixtures, not research
+split data. Two implementation/test issues were corrected: a narrower COS
+interval failed its requested tolerance despite increasing N, and the zero-term
+`torch.sinc` path produced NaN second derivatives. Width refinement and an
+analytic zero-frequency integral resolved them without weakening tolerances.
+
+The first configured MC run used 50,000 antithetic pairs at 512/1024 steps,
+`z=1.959963984540054` (nominal 95%), and the fixed case seed plus step-count rule.
+Its config hash was
+`0ffcbc64265e9c7bd16f170a41f38f51d4966fdd19294e3fef3c0cabce17df11`.
+Both fine-step comparisons failed: regular COS 0.0799642924 was below
+[0.0799906341, 0.0808698918]; low-Feller COS 0.0908907778 was above
+[0.0897853744, 0.0908170134]. The low-Feller refinement check also failed.
+These results were seen before increasing the numerical effort and are preserved
+locally in `reports/tables/heston_validation_initial.json` (including its config).
+
+Changed only the study effort to 200,000 pairs and 1024/2048 steps; retained the
+seed rule/base seeds, 95% confidence multiplier, cases, pricing tolerances, and
+acceptance rules. Both fine-step comparisons and refinement checks then passed.
+The final regular coarse-step interval still narrowly excludes COS and remains
+reported. The initial run is reproducible by restoring those two effort settings
+in a copy of the committed config; no seed search or confidence widening was used.
+
+Sampling uncertainty and timestep bias remain distinct. Sequential numerical
+refinement and these few fixtures do not establish uniform accuracy, simultaneous
+95% coverage, or production IV-label validity. No Heston dataset was generated,
+and T1.3/T1.4 requirements remain pending.

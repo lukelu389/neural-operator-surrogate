@@ -6,6 +6,12 @@ any labels or model results exist. It is a design document, not an executable
 configuration yet. `make check` tests the existing scaffold, not enforcement of
 this protocol. No configuration is frozen at this stage.
 
+[heston_numerics.yaml](heston_numerics.yaml) configures T1.2's reproducible COS
+convergence and Monte Carlo checks. It contains explicit numerical fixtures,
+not experiment splits or frozen data-production settings. Run it with
+`.venv/bin/python scripts/validate_heston.py`; see the
+[validation record](../docs/heston-validation.md) for results and limits.
+
 T1.4 will create `data.yaml`; T1.5 will freeze it and this protocol only after the
 `required_before_G1_freeze` list is resolved. Model configurations and selected
 checkpoints are frozen at T3.4. No test/OOD data may inform these choices.

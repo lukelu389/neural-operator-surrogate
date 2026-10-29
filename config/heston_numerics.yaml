@@ -1,0 +1,37 @@
+# T1.2 numerical fixtures only. Not an experiment split, label-production config,
+# or frozen protocol. Price tolerances are absolute, in spot=1 currency units.
+version: 1
+cos:
+  term_counts: [128, 512, 2048, 4096]
+  truncation_widths: [12.0, 20.0, 28.0, 36.0]
+  selected_terms: 4096
+  selected_width: 28.0
+  reference_terms: 8192
+  reference_width: 36.0
+  absolute_tolerance: 1.0e-8
+cases:
+  - name: regular
+    parameters: [1.0, 1.0, 1.0, 0.04, 1.5, 0.04, 0.3, -0.7, 0.02, 0.01]
+    strikes: [0.8, 1.0, 1.2]
+  - name: short_low_feller
+    parameters: [1.0, 1.0, 0.08333333333333333, 0.01, 0.5, 0.01, 1.0, -0.95, 0.02, 0.0]
+    strikes: [0.95, 1.0, 1.05]
+  - name: long_high_variance
+    parameters: [1.0, 1.0, 2.0, 0.25, 0.5, 0.25, 1.0, -0.1, 0.02, 0.0]
+    strikes: [0.7, 1.0, 1.4]
+  - name: negative_rate_low_feller
+    parameters: [1.0, 1.0, 0.25, 0.09, 0.2, 0.07, 0.9, -0.8, -0.01, 0.025]
+    strikes: [0.9, 1.0, 1.1]
+monte_carlo:
+  n_pairs: 200000
+  step_counts: [1024, 2048]
+  confidence_z: 1.959963984540054
+  # Independent refinement streams use seed + n_steps; intervals cover sampling
+  # uncertainty only. Report refinement separately from the COS comparison.
+  cases:
+    - name: regular
+      parameters: [1.0, 1.0, 1.0, 0.04, 1.5, 0.04, 0.3, -0.7, 0.02, 0.01]
+      seed: 317
+    - name: low_feller
+      parameters: [1.0, 1.0, 1.0, 0.09, 0.7, 0.07, 0.9, -0.8, 0.02, 0.01]
+      seed: 953

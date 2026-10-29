@@ -41,9 +41,14 @@ One ticket per session. Tick when the exit criteria in PLAN.md are met. Add hand
     - Verification: `make check` passed Ruff, strict mypy (12 source files), and 117 tests, including 95 Black–Scholes cases covering published values, independent payoff integration, parity, finite differences, autodiff, limits, and precision failures.
     - Run the README example or `.venv/bin/python -m pytest tests/test_bs.py`; float64 is recommended for reference pricing. Verified on CPU; accelerator execution and extreme-tail relative accuracy remain unverified. The existing editable installation was repaired without dependency changes.
     - Next: T1.2 Heston COS pricer with its required numerical validations. No Heston data generation, IV inversion, model training, holdout access, or protocol freeze occurred in T1.1.
-- [ ] T1.2 Heston COS pricer (torch, batched)
+- [x] T1.2 Heston COS pricer (torch, batched)
   - Done when: BS-limit test, put-call parity, convergence in N and range, Monte Carlo agreement within CI
   - Handoff notes:
+    - 2026-10-28: Implemented the batched PyTorch Heston CF/cumulants/COS pricer and independent antithetic full-truncation Monte Carlo; explicit N/L settings and numerical error handling preserve honest failure reporting.
+    - `make check` passed Ruff, strict mypy (15 source files), and 277 tests; one CUDA comparison was skipped for unavailable hardware. Checks include independent Riccati integration/reference prices, BS limits, parity, convergence, and first/second autodiff.
+    - Run `.venv/bin/python scripts/validate_heston.py`; config/heston_numerics.yaml and docs/heston-validation.md record the cached numerical study. Selected N=4096/L=28 differed from N=8192/L=36 by at most 8.72e-11 across 12 spot=1 quotes.
+    - Both 200,000-pair, 2048-step MC intervals contained COS at nominal 95%; refinement checks passed. The initial smaller run failed and is disclosed in docs/DEVIATIONS.md. Sampling intervals exclude timestep bias; these fixtures do not certify every future IV label.
+    - Next: T1.3 robust IV inversion and explicit failure masks. No training/validation/holdout datasets or frozen hashes were created; GPU execution remains unverified. PyYAML and its typing stubs were added for the required YAML-configured study.
 - [ ] T1.3 IV inversion with failure mask
   - Done when: roundtrip error below stated tolerance; failure fraction reported
   - Handoff notes:

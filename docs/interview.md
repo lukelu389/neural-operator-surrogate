@@ -88,3 +88,24 @@ derivatives are undefined or singular; finite precision can still underflow in
 extreme tails. Cancellation can also produce negative float32 prices at tiny
 total volatility; raise a numerical error rather than clipping, and use float64
 references. Do not claim arbitrary-precision accuracy.
+
+## T1.2 — Heston COS and independent validation
+
+**Why use the Little Heston Trap form?** Algebraically equivalent complex-log
+representations can cross different branch cuts in floating-point evaluation.
+The decaying-exponential representation avoids the unstable branch behavior;
+additional rearrangements remove small-sigma cancellation. Independent Riccati
+integration tests the resulting CF rather than merely checking its normalization.
+
+**Why vary both the COS term count and interval width?** More cosine terms reduce
+series error on a fixed interval but cannot restore excluded tail probability.
+A wider interval reduces truncation error but may need more terms for the same
+resolution. Measure both, then cross-check independent prices; agreement between
+two resolutions of the same formula alone cannot rule out a shared error.
+
+**What does Monte Carlo agreement within a confidence interval establish?** It
+shows consistency with sampling uncertainty for that simulation and numerical
+case. The interval does not include timestep bias. Use step refinement and
+compute standard errors from independent antithetic pair means, not individual
+correlated paths. Preserve failed checks and their settings; increasing numerical
+effort is different from retrying seeds or widening intervals until a test passes.

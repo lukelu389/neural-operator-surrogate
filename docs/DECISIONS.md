@@ -74,3 +74,22 @@
 - Published four-decimal fixtures use absolute tolerance 1e-4. Separate risk-neutral payoff quadrature checks, including small OTM prices, use relative tolerance 2e-9 on the selected cases; these are case-specific checks, not a domain-wide accuracy guarantee.
 - Analytic Greeks match central finite differences and PyTorch first/second derivatives, including the forward-ATM parity branch. Explicit tests cover zero-time/zero-volatility limits, mixed batches, dividends, negative rates, float32/float64 broadcasting, cancellation errors, and overflow.
 - Verified on CPU with the existing Python 3.12.7 environment. Accelerator behavior is unverified; test/OOD experiment datasets remain untouched and no frozen manifest changed.
+
+## 2026-10-28 — T1.2
+
+- Implement the decaying-exponential Heston CF with algebraic cancellation removal and Taylor ratios, so zero/small vol-of-vol converges to the full deterministic-variance limit without switching small positive sigma to BS.
+- Derive log-return c2 from integrated-variance moments and covariance; use positive c2 directly rather than hiding errors with an absolute value. First-two-cumulant intervals follow the Heston treatment in Fang–Oosterlee.
+- Price the bounded put payoff on its clipped integration support and recover calls by parity; explicitly handle the zero-frequency integral to retain valid second derivatives.
+- Require caller-specified N/L and validate both through config/heston_numerics.yaml; the conservative numerical-fixture settings are not frozen data-production defaults or an all-domain error guarantee.
+- Add an independent NumPy full-truncation/log-Euler estimator with antithetic pairs and pair-level standard errors; its nominal confidence interval measures sampling error, with step refinement recorded separately.
+- Add PyYAML 6.x and types-PyYAML 6.x because this is the first executable YAML-configured numerical study; retain all existing numerical dependencies and leave unrelated pricing code unchanged.
+- Cache completed validation runs by source/config/environment hashes and retain failures; record seeds, precision, hardware, versions, and Git HEAD alongside actual source-content hashes.
+- Increase MC paths and time resolution after the initial run failed, preserving the original results and retaining the 95% multiplier, seed rule, fixtures, and acceptance rules; see DEVIATIONS.md for observed results before refinement.
+
+### Verification
+
+- `make check`: Ruff formatting/lint, strict mypy (15 source files), 277 passed and one CUDA comparison skipped because CUDA is unavailable. The known local editable-import repair was applied without changing project import paths.
+- Independent CF Riccati integration, four QuantLib Heston price fixtures, Black–Scholes limits, parity, and first/second autodiff passed. The published price fixtures differed by at most approximately 5.3e-13 (test tolerance 1e-10).
+- The configured convergence study passed at N=4096/L=28 versus N=8192/L=36: maximum absolute discrepancy 8.72e-11 across 12 spot=1 quotes, below 1e-8. Width and term sweeps are both retained in the generated report.
+- Both 200,000-pair fine-step estimates contain COS in nominal 95% sampling intervals; 1024-to-2048-step differences pass the combined-SE check. Methods, exact settings, values, and limitations are in docs/heston-validation.md.
+- CPU float64 study on macOS arm64, Python 3.12.7, NumPy 2.5.4, PyTorch 2.14.1, PyYAML 6.0.3. No data split or research holdout was generated/read; no frozen configuration changed.

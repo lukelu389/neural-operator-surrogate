@@ -5,14 +5,14 @@ surrogates for synthetic Heston implied-volatility surfaces, then evaluate their
 use in calibration. Accuracy, tail errors, invalid quotes, arbitrage, Greeks,
 speed, and variability across seeds are part of the planned comparison.
 
-**Status: Gate 0 complete; T1.1 Black–Scholes pricing and analytic Greeks implemented.
+**Status: Gate 0 complete; T1.1–T1.2 Black–Scholes and Heston COS numerical checks complete.
 No Heston dataset, trained model, or experimental benchmark result exists yet.**
 [PLAN.md](PLAN.md) defines the
 sequential gates; [TODO.md](TODO.md) records verified progress. Start with the
 [reading index](docs/reading/README.md) for the eight core papers and source
 limitations. The [protocol draft](config/eval_protocol.yaml) and its
 [design notes](config/README.md) specify targets, OOD recipes, and unresolved
-freeze requirements. Next is T1.2, the validated Heston COS pricer.
+freeze requirements. Next is T1.3, IV inversion with explicit failure masks.
 Track B and the demo are optional.
 
 ## Setup and verification
@@ -70,8 +70,31 @@ Run `.venv/bin/python -m pytest tests/test_bs.py` for the focused checks or
 independent payoff integration, dividend-adjusted parity, finite differences,
 and first/second autodiff checks. Greek conventions were cross-checked against
 [QuantLib's implementation](https://github.com/lballabio/QuantLib/blob/v1.38/ql/pricingengines/blackcalculator.cpp).
-These verify Black–Scholes behavior on the tested cases; Heston validation,
-IV inversion, and accelerator verification remain separate work.
+These verify Black–Scholes behavior on the tested cases. Heston checks are
+documented below; IV inversion and accelerator verification remain pending.
+
+## Heston COS pricing
+
+`nop.pricing.heston_cos` provides a batched PyTorch characteristic function,
+log-return cumulants, and European call/put prices. Choose `n_terms` and
+`truncation_width` explicitly and verify convergence for the required quotes:
+
+```python
+from nop.pricing.heston_cos import heston_cos_price
+
+price = heston_cos_price(
+    1.0, 1.0, 1.0, 0.04, 1.5, 0.04, 0.3, -0.7,
+    rate=0.02, dividend_yield=0.01, n_terms=4096, truncation_width=28.0,
+)
+```
+
+The argument order is spot, strike, maturity, v0, kappa, theta, sigma, rho,
+followed by optional rate/dividend yield. Run
+`.venv/bin/python scripts/validate_heston.py` to reproduce the configured
+convergence and independent Monte Carlo checks; matching results are cached.
+[Validation notes](docs/heston-validation.md) record methods, observed results,
+the failed initial MC run, and limits. Passing those fixtures does not certify
+all future labels or IV errors. No experiment configuration is frozen yet.
 
 ## Reproducible randomness
 
