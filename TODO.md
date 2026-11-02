@@ -78,9 +78,14 @@ One ticket per session. Tick when the exit criteria in PLAN.md are met. Add hand
 
 ## Gate 2: Baseline trained
 
-- [ ] T2.1 Training loop, logging, sanity tests (overfit 100 samples)
+- [x] T2.1 Training loop, logging, sanity tests (overfit 100 samples)
   - Done when: sanity tests pass
   - Handoff notes:
+    - 2026-11-02: Added shared masked/vega losses, vol-point metrics, AdamW training with validation selection, atomic epoch checkpoints and exact resume, plus explicit local MLflow logging. All eight frozen files remain unchanged.
+    - Run `.venv/bin/python scripts/validate_training.py`: the declared 100-training-row fixture passed at 5,000 updates with standardized masked MSE 1.19850756e-5 <=1e-4; 11,967/12,000 quotes are valid. This is reconstruction, not unseen-data performance or an M0 result.
+    - Cached replay preserved report/checkpoint hashes, the same MLflow run, and exactly 5,000 loss records. Interrupted synthetic training matches uninterrupted weights, optimizer/scheduler, RNG and metric history exactly; no production tuning trial was used.
+    - `make check` passed Ruff, strict mypy (36 sources), and 699 tests, with one CUDA skip. Added mlflow-skinny >=3.17.2,<4 for the frozen logger requirement; existing numerical package versions stayed unchanged. See docs/training-loop.md and docs/interview.md.
+    - Next: T2.2, define M0 before its first trial, enforce twelve paired search draws, train three selected-config seeds, and check validation MAE <=0.2 vol points before other architectures. CUDA/MPS execution is unverified; no test/OOD access occurred.
 - [ ] T2.2 M0 MLP with tuning budget, 3 seeds
   - Done when: validation metrics, learning curve, error heatmaps; stop rule checked
   - Handoff notes:

@@ -1,0 +1,44 @@
+# T2.1 fixture only, never a production architecture or hyperparameter search.
+version: 1
+scope: training_prefix_reconstruction_only
+frozen_policy: config/training.yaml
+dataset: data/heston_v1
+output: runs/training_sanity_v1
+report: reports/tables/training_sanity.json
+tracking_directory: mlruns
+experiment_name: T2.1_training_sanity
+seed: 101
+training_prefix_count: 100
+normalization: refit_on_only_the_100_training_rows
+model:
+  hidden_widths: [256, 256, 256]
+  activation: SiLU
+  initial_output: zero_last_linear_layer
+training:
+  dtype: float32
+  device: cpu
+  torch_threads: 4
+  batch_size: 100
+  max_epochs: 5000
+  max_optimizer_steps: 5000
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  warmup_epochs: 5
+  minimum_learning_rate_fraction: 0.01
+  gradient_clip_norm: 1.0
+  patience_epochs: 5000
+  minimum_improvement_vol_points: 0.0
+  betas: [0.9, 0.999]
+  epsilon: 1.0e-8
+assessment:
+  standardized_masked_MSE_max: 1.0e-4
+  inputs_and_assessment_rows: same_100_training_rows_no_generalization_claim
+  use_for_hyperparameter_or_architecture_selection: forbidden
+linear_check:
+  optimizer: SGD
+  learning_rate: 0.1
+  steps: 50
+  design: [[1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [-1.0, 1.0]]
+  coefficient: [[0.5], [-0.25]]
+  initialization: zeros
+  purpose: deterministic_gradient_direction_and_loss_reduction_fixture_only

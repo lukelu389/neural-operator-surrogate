@@ -9,6 +9,7 @@ description = "Reproducible research on neural surrogates for synthetic option p
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "mlflow-skinny>=3.17.2,<4",
     "numpy>=1.26,<3",
     "PyYAML>=6,<7",
     "torch>=2.2,<3",

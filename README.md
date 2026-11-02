@@ -5,8 +5,8 @@ surrogates for synthetic Heston implied-volatility surfaces, then evaluate their
 use in calibration. Accuracy, tail errors, invalid quotes, arbitrage, Greeks,
 speed, and variability across seeds are part of the planned comparison.
 
-**Status: T1.5 complete: Gate 1 protocol frozen after verifying 200,000 training
-and 20,000 validation surfaces. No trained model or benchmark result exists yet.**
+**Status: T2.1 complete: the training loop passes the 100-sample reconstruction
+check. Gate 1 is frozen; production model comparisons have not started.**
 The T1.3 corner study exposed COS accuracy issues. T1.4's wider-resolution
 validation and per-label convergence policy are recorded in the
 [data card](docs/data-card.md); the earlier [IV validation record](docs/iv-validation.md)
@@ -17,7 +17,7 @@ sequential gates; [TODO.md](TODO.md) records verified progress. Start with the
 limitations. The [frozen protocol](config/eval_protocol.yaml) and its
 [design notes](config/README.md) specify targets, OOD recipes, and shared budgets.
 The [freeze record](docs/protocol-freeze.md) explains evidence and verification.
-Next is T2.1, the training loop and 100-sample sanity checks.
+Next is T2.2, the M0 baseline with its frozen tuning budget and validation stop check.
 Track B and the demo are optional.
 
 ## Setup and verification
@@ -164,6 +164,21 @@ reproduction evidence, and environment; [data/README.md](data/README.md) explain
 storage and independent cold regeneration. The original T1.4 hash is historical;
 T1.5 migrated protocol metadata while preserving every numerical array byte.
 The current hash is recorded in [frozen/manifest.json](frozen/manifest.json).
+
+## Training loop and sanity checks
+
+Run `.venv/bin/python scripts/validate_training.py` after `make data` to verify
+optimization on the first 100 training surfaces. The fixed 5,000-update run
+achieved standardized masked MSE 1.1985e-5 against the frozen 1e-4 criterion.
+This is training-set reconstruction by a temporary fixture, not an M0 result or
+generalization evidence. Production architecture tuning starts at T2.2.
+
+The shared loop supports NaN-safe masks, fixed vega-weighted loss, validation
+selection, atomic checkpoint resume, explicit failed trials, and local MLflow
+logging. `make check` tests bitwise resume and cache integrity; matching sanity
+reruns reuse the same checkpoint and log records. See
+[training-loop.md](docs/training-loop.md) for commands, hashes, measured
+reconstruction errors, logging behavior, and limitations.
 
 ## Reproducible randomness
 

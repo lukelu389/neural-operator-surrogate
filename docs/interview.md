@@ -179,3 +179,26 @@ A natural spline couples its entire row, so invalid knots cannot be silently
 bridged. Total-variance extrapolation can become nonpositive and must fail
 explicitly. Coordinate derivatives require a stated convention; this protocol
 uses interior off-knot diagnostics and differentiates inverse normalization too.
+
+## T2.1 — Training mechanics and exact resume
+
+**Why is multiplying NaN labels by a zero mask unsafe?** IEEE arithmetic leaves
+`NaN * 0` as NaN, and masked expressions can still contaminate backward passes.
+Index valid entries before subtracting and squaring, preserve every original
+quote in coverage counts, and divide by the valid quote count. For vega-weighted
+losses, keep that same denominator and fit the weight scale on training data once.
+
+**What makes an interrupted training run reproducible?** Save model, optimizer,
+scheduler, all used random states, progress, and source/data/config identity at an
+atomic boundary. Replay an unfinished epoch from its previous committed state;
+never silently create another tuning trial. Isolate logging RNG effects and
+replay committed log records idempotently. Compare uninterrupted and resumed
+weights and optimizer states directly, not only approximately equal losses.
+
+**What does overfitting 100 surfaces prove?** It checks the execution path through
+normalization, masks, gradients, optimization, selection, and checkpoint restore
+on real training labels. It establishes neither generalization nor a winning
+architecture. Keep its cap and acceptance criterion fixed, report its actual
+reconstruction error, and leave the production tuning budget and unseen-data
+assessment to later tickets. A nonlinear AdamW trace need not be monotone;
+verify strict descent on a separate controlled convex fixture.

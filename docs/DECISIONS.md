@@ -154,3 +154,22 @@
 - `make check` passed Ruff formatting/lint, strict mypy (31 source files), and 595 tests; one CUDA check was skipped for unavailable hardware. A repeated local editable `.pth` hidden-file issue was repaired by reinstalling the existing package; no tracked import workaround was added.
 - Full train/validation metadata migration and subsequent cached data replay agree on hash `9120ef79ac2c385618cad182ae55d18212b34a591a0579c864fb0d58874797d7`; the migration verifier then rechecked every saved nonmetadata payload against the original T1.4 data.
 - Original numerical labels, masks, moments, grid, generator sources, data configuration, environment identities, and coverage are unchanged. The 0.254571%/0.252625% overall masks and every-maturity checks pass the frozen 3% stop threshold.
+
+## 2026-11-02 — T2.1
+
+- Add `mlflow-skinny` for the frozen local MLflow logging requirement; use an explicit filesystem tracking URI and no remote service. Current MLflow requires an explicit legacy-file-store opt-in; scope it in the logger rather than change the frozen policy. See https://mlflow.org/docs/latest/self-hosting/migrate-from-file-store.
+- Keep the training loop architecture-neutral and validate it on a separately labeled 100-sample fixture before T2.2's baseline architecture and twelve-trial budget. Sanity outcomes must not select production hyperparameters.
+- Implement quote-indexed masked losses and fixed training-scale vega weights; use valid-count aggregation so masked NaNs and uneven batches cannot bias optimization or reported loss.
+- Save atomic epoch generations with model/optimizer/scheduler/RNG states and retain only last/best; repeated log callbacks repair interrupted logging while RNG isolation preserves the same optimization trajectory.
+- Persist numerical failures as failed runs; refuse stale/corrupt caches and preserve their evidence. Match source/data/config/initial-state identities rather than treating a directory's existence as proof of completion.
+- Preserve the original run commit in metadata across later source-identical stage commits; actual source and configuration hashes still control cache compatibility.
+- Pin the minimum MLflow client to the tested 3.17.2 API. Existing NumPy 2.5.4, PyTorch 2.14.1, and PyYAML 6.0.3 remained unchanged; direct local-file logging passes a socket-blocking subprocess test.
+- Use a regular local package installation for verification after repeated macOS hidden editable `.pth` behavior broke imports in fresh child processes. This changes only the local environment, with no tracked import-path workaround; reinstall after source changes.
+
+### Verification
+
+- `make check` passed Ruff, strict mypy (36 source files), and 699 tests; one CUDA check was skipped. Exact resume includes Python/NumPy/torch randomness and random-consuming interrupted log callbacks.
+- The fixed seed-101, 163,960-parameter sanity fixture completed 5,000 updates on 100 training surfaces: standardized masked MSE 1.198507561639417e-5 <=1e-4, with 11,967 valid and 33 masked quotes. Its best reconstruction epoch was 5,000.
+- Reconstruction MAE/RMSE/p99/max were 0.02094764/0.02923971/0.09757364/0.25949031 vol points; no prediction failed. These are same-training-row results, not validation/test performance or architecture comparisons.
+- The controlled linear fixture decreased every step, from 0.234375 to 2.0502360070552507e-8. Nonlinear AdamW monotonicity is not claimed.
+- Cached replay preserved report bytes, checkpoint SHA, MLflow run ID, and exactly 5,000 loss records without another optimizer update. Frozen-file verification still passes; no validation or holdout dataset was read by the sanity command.
