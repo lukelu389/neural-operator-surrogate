@@ -1,0 +1,105 @@
+# T1.5 preregistration; synthetic validation experiments only.
+version: 1
+split: validation
+surface_indices: {start: 0, stop_exclusive: 32, step: 1}
+parameter_order: [v0, kappa, theta, sigma, rho]
+parameter_bounds: config/data.yaml:data_design.id_box
+quote_partition:
+  held_out_z_indices: [1, 4, 7, 10, 13]
+  fit_z_indices: [0, 2, 3, 5, 6, 8, 9, 11, 12, 14]
+  maturities: all_native
+  common_reference_mask: original_validated_label_status_SUCCESS
+  held_out_targets: latent_noiseless_IV_never_used_in_fit_or_start_selection
+conditions:
+  noise_std_vol_points: [0.0, 0.1, 0.3]
+  missing_quote_fractions: [0.0, 0.2]
+  seed_pairs:
+    - {model_seed: 11, experiment_seed: 211}
+    - {model_seed: 29, experiment_seed: 223}
+    - {model_seed: 47, experiment_seed: 227}
+  rng: numpy_Generator_PCG64_with_SeedSequence
+  noise_seed_components: [experiment_seed, validation_surface_index, 0]
+  missing_seed_components: [experiment_seed, validation_surface_index, 1]
+  start_seed_components: [experiment_seed, validation_surface_index, 2]
+  noise_draws: one_standard_normal_full_grid_per_surface_scaled_for_each_noise_level
+  missingness: one_uniform_full_grid_per_surface_drop_lowest_floor_fraction_of_reference_valid_fit_quotes
+  coupling: reuse_same_draws_across_methods_and_conditions
+  invalid_noisy_observation: count_case_as_failure_for_all_methods_no_clipping_or_silent_removal
+  minimum_observed_quotes: 5
+shared_solver:
+  methods: [C0, C1]
+  optimizer: scipy_least_squares_TRF
+  objective: half_sum_of_squared_IV_residuals_in_vol_points_on_observed_quotes
+  parameters: linear_rescale_ID_box_to_closed_unit_cube
+  starts_per_surface: 8
+  starts: independent_uniform_unit_cube_from_shared_start_rng
+  start_boundary_margin: 0.01
+  max_residual_evaluations_per_start: 1000
+  evaluation_count: every_full_residual_vector_including_finite_difference_calls
+  max_jacobian_evaluations_per_start: 200
+  ftol: 1.0e-8
+  xtol: 1.0e-8
+  gtol: 1.0e-8
+  x_scale: 1.0
+  loss: linear
+  C0_jacobian: forward_difference_in_normalized_parameters_switch_backward_when_x_plus_h_exceeds_one
+  C0_absolute_difference_step: 1.0e-4
+  C1_jacobian: exact_surrogate_autodiff_including_inverse_normalization
+  C0_precision: float64
+  C1_precision: frozen_checkpoint_dtype
+  failure: terminate_start_record_reason_do_not_replace
+  budget_exhaustion: optimizer_failure_counted_even_if_last_iterate_has_low_error
+  selection: lowest_observed_objective_among_successful_starts_ties_lower_start_index
+  final_scoring: validated_COS_for_selected_start_only_never_select_C1_start_using_COS
+  all_starts_failed: failed_surface_retain_attempt_in_denominator
+reference_pricer:
+  settings: config/data.yaml:labels
+  validation: reuse_frozen_adaptive_resolution_and_IV_masks
+  failed_required_quote: fail_start_or_scored_case_no_reduced_denominator
+C2:
+  input: concatenated_standardized_IV_with_missing_values_zero_and_binary_observed_mask
+  input_dimension: 240
+  hidden_widths: [512, 512, 512]
+  activation: SiLU
+  output_dimension: 5
+  output_activation: sigmoid
+  target: parameters_scaled_to_unit_ID_box
+  loss: mean_squared_normalized_parameter_error
+  normalization: original_training_split_only
+  seeds: [11, 29, 47]
+  train_count: 200000
+  validation_selection_indices: {start: 32, stop_exclusive: 20000, step: 1}
+  tuning_trials: 0
+  optimizer: AdamW
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  betas: [0.9, 0.999]
+  epsilon: 1.0e-8
+  batch_size: 256
+  max_epochs: 100
+  warmup_epochs: 5
+  schedule: linear_warmup_then_cosine
+  minimum_learning_rate_fraction: 0.01
+  gradient_clip_global_norm: 1.0
+  early_stopping_patience_epochs: 10
+  validation_metric: mean_squared_normalized_parameter_error
+  validation_condition_aggregation: equal_weight_over_all_six_conditions
+  restore: earliest_best_validation_epoch
+  dtype: float32
+  augmentation:
+    fit_partition: same_as_experiment_never_feed_held_out_quotes
+    per_epoch_per_surface: uniformly_choose_one_of_six_noise_missingness_conditions
+    random_stream: numpy_PCG64_SeedSequence_model_seed_epoch_surface_index_3
+    noise_and_masks: same_rules_as_conditions
+    invalid_noisy_observations: zero_input_and_clear_mask_record_count
+    validation_draws: fixed_SeedSequence_model_seed_surface_index_4
+  optional_refinement: omitted_from_required_comparison
+success:
+  noiseless_fit_tolerance_vol_points: 0.05
+  noisy_fit_tolerance: sqrt_of_sum_of_squared_noiseless_tolerance_and_noise_std
+  requires: [bounded_finite_parameters, successful_solver_or_finite_C2_output, all_required_COS_quotes_valid, COS_observed_RMSE_within_tolerance]
+  denominator: all_32_attempted_surfaces_per_seed_and_condition
+  aggregation: per_seed_then_mean_and_sample_std_ddof_1
+  identifiability: all_cases_parameter_distance_versus_latent_COS_surface_RMSE
+  region_disagreement_trigger: C1_C0_normalized_parameter_L2_exceeds_0.5_on_more_than_half_of_jointly_successful_cases_in_any_condition
+  trigger_action: stop_and_investigate_local_surface_and_Jacobian_error_before_conclusions

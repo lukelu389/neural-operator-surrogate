@@ -1,10 +1,12 @@
 # Experiment configuration
 
-[eval_protocol.yaml](eval_protocol.yaml) is the T0.3 draft. It records proposed
-metrics, thresholds, OOD definitions, comparison budgets, and access rules before
-any labels or model results exist. It is a design document, not an executable
-configuration yet. `make check` tests the existing scaffold, not enforcement of
-this protocol. No configuration is frozen at this stage.
+[eval_protocol.yaml](eval_protocol.yaml) is the T1.5 protocol v1. The committed
+[frozen manifest](../frozen/manifest.json) records the effective Gate 1 freeze.
+[training.yaml](training.yaml), [diagnostics.yaml](diagnostics.yaml), and
+[calibration.yaml](calibration.yaml) complete the shared budgets and numerical
+policies. See the [freeze record](../docs/protocol-freeze.md) for verification,
+metadata migration, and remaining gate restrictions. No models or holdouts have
+been evaluated at this stage.
 
 [heston_numerics.yaml](heston_numerics.yaml) configures T1.2's reproducible COS
 convergence and Monte Carlo checks. It contains explicit numerical fixtures,
@@ -18,7 +20,7 @@ and center diagnostic, including both calls and puts. Run
 reports masks, price roundtrips, and selected/reference COS discrepancies.
 This is a numerical study, not a training/validation sample or frozen IV policy.
 
-[data.yaml](data.yaml) implements the draft's training/validation recipes and
+[data.yaml](data.yaml) implements the training/validation recipes and
 records holdout recipes without generating them. It sets adaptive COS effort,
 per-label convergence checks, IV masks, and deterministic chunk/worker settings.
 [data_numerics.yaml](data_numerics.yaml) controls the wider fixed-resolution
@@ -26,9 +28,9 @@ prerequisite study; `scripts/validate_adaptive_labels.py` independently checks
 the adaptive grid implementation against fixed quote pricing. `make data`
 requires both numerical checks to pass with matching cache identities.
 
-T1.5 will freeze `data.yaml` and this protocol only after the
-`required_before_G1_freeze` list is resolved. Model configurations and selected
-checkpoints are frozen at T3.4. No test/OOD data may inform these choices.
+The Gate 1 manifest covers six configurations plus the coordinate-normalization
+and M0-interpolation implementations. Model configurations and selected
+checkpoints remain unfrozen until T3.4. No test/OOD data informs these choices.
 
 ## Targets, units, and comparison rules
 
@@ -45,7 +47,7 @@ Reference failures use a common mask; a model's nonfinite or nonpositive IV
 prediction cannot remove a difficult quote from its score. Report prediction
 failures and mark affected metrics undefined, failing target assessment.
 
-## Proposed data and OOD definitions
+## Data and OOD definitions
 
 Use the plan's starting parameter box, 8 by 15 scaled grid, and split sizes.
 Do not impose the Feller condition: the experiment intentionally includes that
@@ -73,13 +75,12 @@ M0 uses a natural cubic spline of total variance in k. Its short-maturity result
 uses linear total-variance extrapolation in T at fixed k and must be labeled
 `M0_plus_extrapolation`, using the full-grid headline checkpoint. The held-out
 strike experiment uses a separate subset-quote checkpoint. Nonpositive
-extrapolated variance is a failure, not clipped away. Off-grid normalization and
-adapter validation remain freeze blockers.
+extrapolated variance is a failure, not clipped away. Train-only off-grid normalization and the adapter are tested; see the freeze record.
 
 ## Holdout access and later diagnostics
 
 The supplied plan has two sequencing ambiguities, recorded in
-[DEVIATIONS.md](../docs/DEVIATIONS.md). This draft preserves the stricter access
+[DEVIATIONS.md](../docs/DEVIATIONS.md). The protocol preserves the stricter access
 rule: T1.4 materializes training/validation only and records test/OOD recipes;
 `scripts/final_eval.py` alone materializes and reads holdouts after Gate 3 hash
 verification. The sampler must not generate a larger prefix containing test
@@ -93,7 +94,7 @@ selection, so these are not independent test results. Calibration compares all
 methods against the same observations, masks, and parameter bounds; C0/C1 share
 starts and start budgets. Score recovered parameters with validated COS for every
 method, including C2. Report noisy observed fit, latent surface error, and disjoint
-held-out-quote error separately. Proposed noise-dependent fit tolerances are design
+held-out-quote error separately. Noise-dependent fit tolerances are design
 choices, not confidence bounds or success guarantees.
 
 C2 trains and fits normalization on training surfaces only. A calibration succeeds
@@ -108,11 +109,11 @@ Requiring holdout artifacts before Gate 3, or independent test diagnostics after
 the single final pass, would require resolving the sequencing conflict before
 freeze. Do not silently bypass access rules or claim a stronger evaluation.
 
-## Before freezing
+## Verify the freeze
 
-Resolve the YAML's explicit checklist: validated COS and IV settings, failure
-coverage, matching data recipes, numerical training/search budgets, off-grid
-normalization, derivative steps, arbitrage tolerances, and calibration cases,
-quote partitions, optimizer caps, and C2 training budget. Verify these using only
-permitted development data. No loader, sampler, metric, or evaluator implementation
-is part of T0.3; those belong to later tickets.
+Run `.venv/bin/python scripts/freeze_protocol.py --verify` and `make check`.
+The verifier checks every committed frozen-file hash without requiring generated
+artifacts. Creation checks additionally require complete train/validation coverage
+and current passing numerical reports. Final evaluation remains unavailable until
+T3.4; Gate 1 does not authorize holdout access. Changes to frozen files require
+Luke's approval and a deviation record.

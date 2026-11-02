@@ -5,8 +5,8 @@ surrogates for synthetic Heston implied-volatility surfaces, then evaluate their
 use in calibration. Accuracy, tail errors, invalid quotes, arbitrage, Greeks,
 speed, and variability across seeds are part of the planned comparison.
 
-**Status: T1.4 complete: 200,000 training and 20,000 validation surfaces generated
-and verified. No trained model or experimental benchmark result exists yet.**
+**Status: T1.5 complete: Gate 1 protocol frozen after verifying 200,000 training
+and 20,000 validation surfaces. No trained model or benchmark result exists yet.**
 The T1.3 corner study exposed COS accuracy issues. T1.4's wider-resolution
 validation and per-label convergence policy are recorded in the
 [data card](docs/data-card.md); the earlier [IV validation record](docs/iv-validation.md)
@@ -14,9 +14,10 @@ is preserved.
 [PLAN.md](PLAN.md) defines the
 sequential gates; [TODO.md](TODO.md) records verified progress. Start with the
 [reading index](docs/reading/README.md) for the eight core papers and source
-limitations. The [protocol draft](config/eval_protocol.yaml) and its
-[design notes](config/README.md) specify targets, OOD recipes, and unresolved
-freeze requirements. Next is T1.5, completing the protocol checklist and freezing verified configs.
+limitations. The [frozen protocol](config/eval_protocol.yaml) and its
+[design notes](config/README.md) specify targets, OOD recipes, and shared budgets.
+The [freeze record](docs/protocol-freeze.md) explains evidence and verification.
+Next is T2.1, the training loop and 100-sample sanity checks.
 Track B and the demo are optional.
 
 ## Setup and verification
@@ -108,7 +109,7 @@ followed by optional rate/dividend yield. Run
 convergence and independent Monte Carlo checks; matching results are cached.
 [Validation notes](docs/heston-validation.md) record methods, observed results,
 the failed initial MC run, and limits. Passing those fixtures does not certify
-all future labels or IV errors. No experiment configuration is frozen yet.
+all future labels or IV errors. Production numerical settings are recorded in the Gate 1 manifest.
 
 ## Implied volatility and failure masks
 
@@ -143,7 +144,7 @@ corner/center study, or `.venv/bin/python -m pytest tests/test_iv.py` for focuse
 tests. [IV validation notes](docs/iv-validation.md) define tolerances, mask
 coverage, measured roundtrip errors, and limitations. A good roundtrip verifies
 inversion of the supplied price; it does not certify that price's accuracy.
-The settings above are numerical-study choices, not frozen production defaults.
+The example matches the IV policy in the frozen production data configuration.
 
 ## Training and validation data
 
@@ -160,7 +161,9 @@ recipes remain unmaterialized until the final evaluation gate.
 
 See the [data card](docs/data-card.md) for coverage, numerical limits, hashes,
 reproduction evidence, and environment; [data/README.md](data/README.md) explains
-storage and independent cold regeneration. No configuration is frozen yet.
+storage and independent cold regeneration. The original T1.4 hash is historical;
+T1.5 migrated protocol metadata while preserving every numerical array byte.
+The current hash is recorded in [frozen/manifest.json](frozen/manifest.json).
 
 ## Reproducible randomness
 
@@ -183,7 +186,8 @@ concerns; the utility does not pretend to change them retroactively.
 | `make install` | Install the package and development tools |
 | `make check` | Formatting, lint, typing, and tests |
 | `make data` | Validate numerics; generate/resume and verify training/validation data |
-| `make final-eval` | Always refuses at this stage; evaluation and frozen-hash verification arrive at T3.4 |
+| `.venv/bin/python scripts/freeze_protocol.py --verify` | Verify all eight Gate 1 frozen-file hashes |
+| `make final-eval` | Always refuses until the separate model/checkpoint freeze and evaluator at T3.4 |
 | `make reproduce` | Exits with an explicit pending-ticket error until T7.2 |
 
 Data generation requires passing numerical validation first. Final evaluation may only open test
@@ -193,8 +197,8 @@ Training and model selection must use training and validation data only.
 ## Layout
 
 - `src/nop/`: pricing, data, models, training, evaluation, and calibration modules.
-- `config/`: draft evaluation protocol and future experiment configurations;
-  `frozen/`: future frozen-file hashes.
+- `config/`: frozen evaluation, data, training, diagnostic, and calibration policies;
+  `frozen/`: Gate 1 hashes (model/checkpoint freeze remains pending).
 - `scripts/`: reproducible entry points; `tests/`: automated checks.
 - `docs/`: decisions, deviations, reading notes, and interview preparation.
 - `reports/`: future report, tables, and figures; `notebooks/`: figures only.
@@ -208,7 +212,7 @@ models without closed-form pricers. Speed and accuracy improvements must be
 measured. Calibration will use synthetic surfaces; real-market performance and
 tradable profit are not claims of this project.
 
-The draft assigns later Greeks/arbitrage diagnostics and calibration to validation
+The protocol assigns later Greeks/arbitrage diagnostics and calibration to validation
 parameters to preserve the single final holdout pass. These will be labeled as
 validation analyses, not independent test evidence; the sequencing interpretation
 and its limits are recorded in [DEVIATIONS.md](docs/DEVIATIONS.md).

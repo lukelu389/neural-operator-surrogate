@@ -1,0 +1,94 @@
+# T1.5 numerical preregistration, established before any model results.
+# Fixtures below are explicit unit cases, never samples from research splits.
+version: 1
+units:
+  spot: 1.0
+  rate: 0.02
+  dividend_yield: 0.0
+  implied_volatility: decimal
+  maturity: years
+parameter_order: [v0, kappa, theta, sigma, rho]
+parameter_box:
+  v0: [0.01, 0.25]
+  kappa: [0.5, 5.0]
+  theta: [0.01, 0.25]
+  sigma: [0.1, 1.0]
+  rho: [-0.95, -0.1]
+greek_sensitivities:
+  target: IV_derivatives_not_option_price_Greeks
+  method: central_finite_difference
+  parameter_step_fraction_of_ID_width: 1.0e-3
+  parameter_steps: {v0: 0.00024, kappa: 0.0045, theta: 0.00024, sigma: 0.0009, rho: 0.00085}
+  coordinate_steps: {k: 0.0001, T: 0.0001}
+  coordinate_step_units: {k: dimensionless_log_moneyness, T: years}
+  refinement_factor: 0.5
+  reference_derivative: refined_central_difference
+  reliability_absolute_tolerance: 1.0e-4
+  reliability_relative_tolerance: 0.01
+  reliability_rule: "abs(D_h - D_h/2) <= absolute_tolerance + relative_tolerance * abs(D_h/2)"
+  reliability_units: decimal_IV_per_differentiated_coordinate_unit
+  maturity_derivative: fixed_forward_log_moneyness_k_and_fixed_parameters
+  strike_at_every_stencil: "spot * exp((rate - dividend_yield) * T + k)"
+  other_derivatives: hold_other_parameters_and_coordinates_fixed
+  parameter_stencil_domain: closed_ID_parameter_box
+  coordinate_stencil_domain: finite_k_and_strictly_positive_T
+  required_quotes: base_and_all_four_stencil_quotes_valid
+  invalid_or_unreliable_stencil: masked_and_counted_no_one_sided_fallback
+  cos: {terms: 32768, width: 80.0}
+  iv:
+    price_atol: 0.0
+    price_rtol: 1.0e-10
+    iv_atol: 1.0e-10
+    min_normalized_vega: 1.0e-4
+    volatility_upper: 5.0
+    max_iterations: 100
+  fixtures:
+    - {name: regular, parameters: [0.04, 1.5, 0.04, 0.3, -0.7], k: 0.0, T: 1.0}
+    - {name: short_skew, parameters: [0.07, 0.8, 0.05, 0.7, -0.85], k: -0.04, T: 0.25}
+    - {name: long_high_variance, parameters: [0.20, 3.0, 0.18, 0.5, -0.25], k: 0.15, T: 1.5}
+arbitrage:
+  butterfly:
+    quantity: successive_call_price_strike_slope_difference
+    formula: "(C[i+2]-C[i+1])/(K[i+2]-K[i+1]) - (C[i+1]-C[i])/(K[i+1]-K[i])"
+    absolute_tolerance: 1.0e-8
+    units: dimensionless_price_per_strike
+    check: quantity_greater_than_or_equal_to_negative_tolerance
+    required_quotes: three_adjacent_native_valid_quotes
+  calendar:
+    quantity: later_minus_earlier_total_variance_at_fixed_forward_k
+    absolute_tolerance: 1.0e-10
+    units: decimal_IV_squared_times_years
+    check: quantity_greater_than_or_equal_to_negative_tolerance
+    maturity_pairs: adjacent_native_maturities
+    interpolation: piecewise_linear_total_variance_in_k
+    domain: intersection_of_native_k_supports_no_extrapolation
+    common_k_points: 15
+    common_k_rule: equally_spaced_including_both_intersection_endpoints
+    required_quotes: exact_valid_node_or_two_adjacent_native_valid_bracketing_nodes
+  invalid_quotes: exclude_affected_checks_and_report_coverage_never_bridge_invalid_nodes
+  invalid_prediction: nonfinite_or_nonpositive_IV
+  report: rates_raw_negative_magnitudes_valid_check_counts_and_excluded_coverage
+validation:
+  torch_threads: 1
+  bs_volatility: 0.2
+  bs_maturities: [0.25, 0.5, 1.0, 2.0]
+  bs_z: [-2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5]
+  bs_k_scale: 0.2
+  constructed_butterfly_magnitudes: [5.0e-9, 5.0e-8]
+  constructed_calendar_magnitudes: [5.0e-11, 5.0e-10]
+  constructed_butterfly_strikes: [0.9, 1.0, 1.1]
+  constructed_butterfly_calls: [0.3, 0.2, 0.1]
+  constructed_calendar_total_variance: 0.04
+
+evaluation:
+  split: validation
+  greek_surface_indices: {start: 0, stop_exclusive: 32, step: 1}
+  greek_grid:
+    maturities: arithmetic_midpoints_of_adjacent_native_training_maturities
+    z: arithmetic_midpoints_of_adjacent_native_training_z_nodes
+    k: 0.2_times_z_times_sqrt_actual_query_T
+    motivation: avoid_piecewise_normalization_knots_and_clamp_boundaries
+    derivative_query_context: all_other_query_coordinates_held_fixed
+    required_checks: base_and_stencil_remain_inside_same_normalization_cell
+  arbitrage_surface_indices: {start: 0, stop_exclusive: 20000, step: 1}
+  arbitrage_grid: full_native_grid

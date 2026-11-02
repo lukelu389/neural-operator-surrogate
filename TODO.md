@@ -65,9 +65,14 @@ One ticket per session. Tick when the exit criteria in PLAN.md are met. Add hand
     - A full cached replay and four cold production-chunk regenerations preserve hashes; combined SHA-256 is 50df50f75c727f238e6db44cb57fe44d6173b8f0a80921de8dc0e2b5f452efc7. See docs/data-card.md and docs/data-hashes.json; a second full cold replay was not run.
     - `make check` passed Ruff, strict mypy (25 sources), and 459 tests, with one CUDA skip. Both fixed/adaptive numerical prerequisite studies pass. No dependency was added; generated datasets/reports remain ignored by Git.
     - Next: T1.5, completing every freeze checklist item. Current archives embed the whole draft protocol hash: resolve subsequent provenance changes explicitly with regeneration or verified metadata migration before freezing. No test/OOD data, model training, or frozen manifest was created.
-- [ ] T1.5 Freeze protocol v1 (hashes in frozen/)
+- [x] T1.5 Freeze protocol v1 (hashes in frozen/)
   - Done when: frozen files committed; stop rule on failure mask checked
   - Handoff notes:
+    - 2026-11-02: Completed shared training/calibration budgets, tested train-only off-grid normalization/M0 adapter, fixed diagnostic policies, and froze eight files after current numerical evidence and actual train/validation coverage passed.
+    - Explicit protocol metadata migration preserved all nonmetadata array bytes; original T1.4 artifacts remain at data/heston_v1_t14. Full cached replay and migration recheck agree on current dataset hash 9120ef79ac2c385618cad182ae55d18212b34a591a0579c864fb0d58874797d7.
+    - Run `.venv/bin/python scripts/freeze_protocol.py --verify`, `.venv/bin/python scripts/validate_diagnostics.py`, and `make check`. Ruff, strict mypy (31 sources), and 595 tests pass; one CUDA test is skipped. All 21 finite-difference fixtures and 81 analytic arbitrage checks pass.
+    - See docs/protocol-freeze.md and docs/DEVIATIONS.md for migration evidence, derivative conventions, numerical limits, and three interview answers in docs/interview.md. No dependency, model result, or test/OOD access was introduced.
+    - Next: T2.1 training loop, MLflow local logging, and the frozen 100-sample sanity check. Gate 3 model/checkpoint freeze remains mandatory; GPU speed evidence will require suitable hardware at Gate 4.
 
 
 

@@ -155,3 +155,27 @@ undefined statistics. Apply those fixed moments to validation. Do not resample
 failed surfaces or silently drop quote positions; report coverage by maturity
 and moneyness and use identical reference masks across architectures. Reduced
 data and withheld-coordinate experiments must fit their own allowed statistics.
+
+## T1.5 — Preregistration, interpolation, and immutable evidence
+
+**Why freeze training details as well as headline metrics?** Model comparisons
+can be biased through unequal search effort, early stopping, seed selection,
+normalization, or masks even when they share a reported metric. Fix those choices,
+count failed trials, preserve all seeds, and check parameter budgets. A hash
+proves file identity; it does not prove that the protocol is scientifically sound
+or that a later implementation actually obeyed it.
+
+**How can protocol metadata change without changing numerical evidence?** Before
+freeze, require the same data recipe, numerical code, configuration, and environment.
+Copy each archive and replace only its protocol-hash metadata, then compare every
+other array's shape, dtype, raw bytes, and NPY payload. Preserve the original
+artifacts and both identities. Archive hashes necessarily change; label values do
+not. A subsequent cache replay checks consistency, not independent cold repricing.
+
+**Why treat interpolation and normalization as part of the experiment?** They
+affect both extrapolated values and derivatives. Interpolating log standard
+deviation keeps it positive, while training-only moments prevent leakage.
+A natural spline couples its entire row, so invalid knots cannot be silently
+bridged. Total-variance extrapolation can become nonpositive and must fail
+explicitly. Coordinate derivatives require a stated convention; this protocol
+uses interior off-knot diagnostics and differentiates inverse normalization too.

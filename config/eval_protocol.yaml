@@ -1,9 +1,13 @@
-# T0.3 draft. No data or model results have been observed. Not executable or frozen.
+# T1.5 protocol v1. Training/validation labels inspected; no model or holdout results.
+# Effective freeze is recorded by frozen/manifest.json after verification.
 protocol_version: 1
-status: draft
+status: frozen
 track: A_synthetic_heston
 freeze_at: T1.5
 model_freeze_at: T3.4
+training_config: config/training.yaml
+calibration_config: config/calibration.yaml
+diagnostics_config: config/diagnostics.yaml
 
 units:
   maturity: years
@@ -17,7 +21,7 @@ units:
   log_moneyness: "k = log(K / F(T))"
   scaled_moneyness: "k = z * 0.2 * sqrt(T)"
 
-# These are proposed recipes, not generated datasets. T1.4 data.yaml must agree.
+# Train/validation generated at T1.4. Test/OOD remain unmaterialized recipes.
 data_design:
   parameter_order: [v0, kappa, theta, sigma, rho]
   id_box:
@@ -99,6 +103,8 @@ fairness:
   selection_metric: validation_MAE_vol_points
   selection_tie_breaks: [validation_p99_abs_error, lower_parameter_count, lexical_config_id]
   best_model: validation_selected_architecture_never_best_test_score_or_seed
+  architecture_selection: lowest_mean_validation_MAE_across_three_full_grid_headline_seeds
+  architecture_tie_breaks: [mean_validation_p99_abs_error, lower_parameter_count, lexical_model_id]
   calibration_surrogate_selection: validation_only_before_T3.4
 
 accuracy:
@@ -146,7 +152,15 @@ query_generalization:
   labels_for_held_out_quotes: never_used_in_training_loss_or_normalization
   model_comparison: M1_M2_M3_against_M0_with_spline_adapter
   checkpoints: train_and_freeze_before_final_holdout_pass
-  off_grid_target_normalization: unresolved_before_G1_freeze_no_holdout_statistics
+  off_grid_target_normalization:
+    implementation: src/nop/train/coordinates.py
+    source: valid_training_quotes_only_on_coordinates_available_to_each_run
+    method: bilinear_mean_and_log_standard_deviation_in_z_and_T
+    z_at_query: k_divided_by_0.2_sqrt_actual_query_T
+    outside_training_support: independently_clamp_z_and_T_for_moments_only
+    query_coordinates: never_clipped_or_replaced_for_model_input
+    derivatives: through_inverse_normalization_at_off_knot_interior_queries
+    held_out_coordinates: no_label_statistics_used_even_for_validation_selection
   M0_adapter:
     headline_short_maturity_checkpoint: full_grid_headline_M0_for_each_seed
     held_out_strike_checkpoint: separate_subset_quote_M0_for_each_seed
@@ -154,6 +168,10 @@ query_generalization:
     interpolated_quantity: "w = T * IV^2"
     strike_method: natural_cubic_spline_in_k_per_native_maturity
     strike_extrapolation: forbidden
+    between_maturities: linear_total_variance_at_fixed_k
+    long_maturity_extrapolation: forbidden
+    invalid_native_point: fail_entire_affected_spline_row_no_bridging
+    invalid_adapter_prediction: never_remove_from_common_reference_mask
     short_maturity_method: linear_w_extrapolation_in_T_from_first_two_native_maturities_at_fixed_k
     output: "IV = sqrt(w / T)"
     nonpositive_w: prediction_failure_no_clipping
@@ -169,8 +187,15 @@ diagnostics:
     maturity_derivative: fixed_forward_log_moneyness_k_and_fixed_parameters
     other_derivatives: hold_other_parameters_and_coordinates_fixed
     coordinate_models: [M1, M2, M3]
+    M0_parameter_sensitivities: through_declared_spline_adapter_at_same_midpoint_queries
+    M0_report_label: M0_plus_interpolation
+    M0_coordinate_sensitivities: excluded
     reference: finite_differences_of_validated_COS_plus_IV_inversion
     report: absolute_error_distributions_and_valid_stencil_coverage
+    evaluation_coordinates: diagnostics_config.evaluation.greek_grid
+    evaluation_surface_indices: diagnostics_config.evaluation.greek_surface_indices
+    query_context: all_other_query_coordinates_fixed_when_differentiating_one_output
+    include_inverse_normalization_derivatives: true
   arbitrage:
     butterfly: successive_call_price_strike_slopes_must_be_nondecreasing
     calendar: total_variance_must_be_nondecreasing_in_T_at_fixed_k
@@ -236,7 +261,7 @@ stop_rules:
   GPU_baseline_unavailable: Gate4_speed_exit_incomplete_report_missing_hardware
   frozen_file_change: stop_obtain_user_approval_and_log_results_already_seen
 
-# Freeze is blocked until these details are numerical, reviewed, and committed.
+# Freeze script verifies these resolved prerequisites and concrete evidence.
 required_before_G1_freeze:
   - validated_COS_truncation_terms_precision_and_IV_tolerances_in_data_yaml
   - failure_mask_stop_rule_checked_on_train_and_validation_only
@@ -252,3 +277,13 @@ artifact_metadata:
   generated_data_and_checkpoints_in_git: false
   results: all_models_all_seeds_tail_errors_failures_and_negative_findings
   market_performance_claims: forbidden_synthetic_only
+
+freeze_checklist:
+  validated_COS_truncation_terms_precision_and_IV_tolerances_in_data_yaml: resolved
+  failure_mask_stop_rule_checked_on_train_and_validation_only: resolved
+  data_yaml_agrees_with_split_recipes_ranges_grids_seeds_and_counts_above: resolved
+  shared_tuning_search_ranges_training_cap_warmup_clipping_early_stopping_and_loss_ablation: resolved
+  train_only_off_grid_normalization_and_M0_adapter_validated_without_test_or_OOD_access: resolved
+  Greek_finite_difference_steps_and_arbitrage_numerical_tolerances: resolved
+  calibration_surface_ids_quote_partitions_training_and_experiment_seed_pairing_solver_caps_and_C2_training_budget: resolved
+  resolve_any_requested_change_to_lazy_holdouts_or_validation_only_later_diagnostics: resolved

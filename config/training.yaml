@@ -1,0 +1,83 @@
+# T1.5 shared budget; architectures are specified and frozen at Gate 3.
+version: 1
+model_ids: [M0, M1, M2, M3]
+nominal_parameters: 1000000
+max_relative_parameter_difference_from_M0: 0.10
+architecture_selection: one_fixed_architecture_per_model_before_its_first_trial
+architecture_budget_search: parameter_counts_and_shapes_only_no_label_scores
+training:
+  dtype: float32
+  mixed_precision: false
+  batch_size: 256
+  max_epochs: 100
+  shuffle: seeded_per_epoch
+  drop_last: false
+  optimizer: AdamW
+  betas: [0.9, 0.999]
+  epsilon: 1.0e-8
+  weight_decay_applies_to: all_trainable_parameters
+  gradient_clip_global_norm: 1.0
+  schedule: linear_warmup_then_cosine
+  warmup_epochs: 5
+  schedule_step: each_optimizer_update
+  minimum_learning_rate_fraction: 0.01
+  early_stopping:
+    metric: validation_MAE_vol_points
+    every_epochs: 1
+    patience_epochs: 10
+    minimum_improvement_vol_points: 0.0
+    ties: retain_earlier_epoch
+    restore: best_validation_epoch
+  invalid_prediction: fail_trial_no_resampling
+  seeds: [11, 29, 47]
+  logger: MLflow_local_file_store
+  log: [all_configs, seeds, source_hashes, dataset_hash, epoch_losses, validation_metrics, learning_rates, checkpoint_hashes, failures, elapsed_time, environment]
+tuning:
+  trials_per_model: 12
+  random_seed: 101
+  training_seed: 101
+  sampler: numpy_Generator_PCG64
+  draw_order: trial_then_learning_rate_then_weight_decay
+  paired_identical_draws_across_models: true
+  learning_rate: {distribution: log_uniform, low: 1.0e-4, high: 3.0e-3}
+  weight_decay: {distribution: log_uniform, low: 1.0e-6, high: 1.0e-2}
+  other_settings: fixed_as_above
+  failed_trials: count_against_budget_no_replacement
+  interrupted_run: resume_same_checkpoint_and_rng_states_not_new_trial
+  selection_metric: validation_MAE_vol_points
+  tie_breaks: [validation_p99_abs_error, lower_parameter_count, lexical_config_id]
+headline_loss:
+  formula: mean_of_squared_standardized_IV_residuals_over_valid_quotes
+  reference_mask: IV_status_SUCCESS
+  aggregation: sum_of_valid_squared_residuals_divided_by_valid_quote_count
+  empty_batch: skip_and_record_no_optimizer_or_schedule_step
+vega_ablation:
+  models: [M0, M1, M2, M3]
+  dataset: full_training_split_full_grid
+  seeds: [11, 29, 47]
+  hyperparameters: reuse_selected_headline_config_no_additional_tuning
+  raw_weight: "(reference_BS_vega * training_target_standard_deviation) ** 2"
+  normalization: divide_by_fixed_mean_raw_weight_over_all_valid_training_quotes
+  loss: mean_of_weight_times_squared_standardized_IV_residual_over_valid_quotes
+  interpretation: first_order_squared_price_error_up_to_a_fixed_training_scale
+  clipping: none
+  evaluation: same_final_holdout_pass_separately_labeled_not_used_for_model_selection
+secondary_runs:
+  data_efficiency_sizes: [5000, 20000, 50000, 200000]
+  subset: nested_training_prefixes
+  query_subset_z_indices: [0, 2, 4, 6, 8, 10, 12, 14]
+  hyperparameters: reuse_selected_headline_config_no_additional_tuning
+  seeds: [11, 29, 47]
+  normalization: fit_only_labels_and_parameters_available_to_each_run
+  validation_selection_for_query_run: training_coordinate_subset_only
+  training_cap: same_as_headline
+  full_size_checkpoint: data_efficiency_only_reuse_headline_no_duplicate_training
+  query_subset_checkpoint: separate_subset_quote_run_never_reuse_full_grid_headline
+sanity:
+  training_prefix_count: 100
+  seed: 101
+  max_optimizer_steps: 5000
+  standardized_masked_MSE_max: 1.0e-4
+  monotonicity_check: deterministic_small_linear_fixture_with_stable_step
+  nonlinear_run: report_loss_trace_no_claim_every_AdamW_step_is_monotone
+  use_for_tuning: forbidden

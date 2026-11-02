@@ -135,3 +135,22 @@
 - Full cached replay preserved the dataset hash, and four cold production chunks totaling 608 surfaces were byte-identical; independent cold synthetic and serial/parallel tests also passed. A second full cold 220k generation was not performed.
 - `make check` passed Ruff, strict mypy (25 source files), and 459 tests; one CUDA check was skipped. No holdout access or freeze occurred. Detailed hashes, summaries, and environment are in docs/data-hashes.json.
 - The complete draft-protocol hash is embedded in current chunks. Resolving T1.5 protocol placeholders therefore requires documented provenance reconciliation before freeze; do not silently accept a stale cache.
+
+## 2026-11-02 — T1.5
+
+- Complete and freeze the shared AdamW search/training budgets, loss ablation, seed aggregation, calibration cases/partitions/solver caps, and inverse-network budget before any model results; defer architecture configs/checkpoint hashes to Gate 3.
+- Choose bounded SciPy trust-region least squares for C0/C1, differing in finite-difference versus autodiff Jacobians; include every finite-difference residual call in the common cap to expose computational cost honestly. SciPy is needed at T5, not installed in this ticket.
+- Preregister MLflow local logging for T2.1 to satisfy PLAN.md without an external service; no dependency is added in T1.5.
+- Interpolate training mean and log standard deviation in z/T for off-grid normalization, clamping only the moment lookup; subset-coordinate runs must never fit moments to withheld labels.
+- Use natural cubic total-variance interpolation for M0, retaining explicit adapter failures; an invalid native knot invalidates its entire dependent spline row rather than silently changing the reference mask.
+- Place later IV-sensitivity diagnostics at interior midpoint coordinates to avoid nondifferentiable normalization knots; include inverse-normalization derivatives and label M0 parameter derivatives through its adapter explicitly.
+- Keep numerical fixture checks separate from research data: all 21 finite-difference stencils pass refinement, 36/45 analytic BS butterfly/calendar checks pass, and constructed tolerance cases behave as expected.
+- Reconcile the draft protocol metadata through verified copying rather than repricing: preserve every nonmetadata array byte, original artifacts, historical hashes, and a separate migration proof; verify a complete cached replay before freezing.
+- Require current passing numerical reports, actual recomputed mask coverage, exact provenance, and resolved concrete preregistration before creating the Gate 1 manifest. Hash verification alone does not authorize model evaluation or holdout access.
+- No test/OOD dataset was materialized or read; no model training or tuning occurred. The user authorized sequential completion and stage commits/pushes; gate order and frozen-file approval rules remain in force.
+
+### Verification
+
+- `make check` passed Ruff formatting/lint, strict mypy (31 source files), and 595 tests; one CUDA check was skipped for unavailable hardware. A repeated local editable `.pth` hidden-file issue was repaired by reinstalling the existing package; no tracked import workaround was added.
+- Full train/validation metadata migration and subsequent cached data replay agree on hash `9120ef79ac2c385618cad182ae55d18212b34a591a0579c864fb0d58874797d7`; the migration verifier then rechecked every saved nonmetadata payload against the original T1.4 data.
+- Original numerical labels, masks, moments, grid, generator sources, data configuration, environment identities, and coverage are unchanged. The 0.254571%/0.252625% overall masks and every-maturity checks pass the frozen 3% stop threshold.

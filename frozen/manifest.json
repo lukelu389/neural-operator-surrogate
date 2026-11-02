@@ -1,0 +1,73 @@
+{
+  "code_commit_at_freeze": "ebf5ef751b79d494d8ab50bce3ffc34ee18dd962",
+  "evidence": {
+    "dataset": {
+      "coverage": {
+        "train": {
+          "attempted": 24000000,
+          "failed": 61097,
+          "failure_fraction": 0.0025457083333333334,
+          "failure_fraction_by_maturity": [
+            0.003417,
+            0.0024363333333333333,
+            0.0021006666666666665,
+            0.0019453333333333334,
+            0.0021366666666666665,
+            0.0023526666666666665,
+            0.002805666666666667,
+            0.0031713333333333333
+          ],
+          "surfaces": 200000
+        },
+        "validation": {
+          "attempted": 2400000,
+          "failed": 6063,
+          "failure_fraction": 0.00252625,
+          "failure_fraction_by_maturity": [
+            0.003353333333333333,
+            0.00246,
+            0.0020933333333333333,
+            0.0019533333333333334,
+            0.0021266666666666665,
+            0.00234,
+            0.002776666666666667,
+            0.003106666666666667
+          ],
+          "surfaces": 20000
+        }
+      },
+      "dataset_hash": "9120ef79ac2c385618cad182ae55d18212b34a591a0579c864fb0d58874797d7",
+      "manifest_sha256": "7942356a9e24da4f8eb9818fffe3997ac910fccb6b0a831aad7d75e3cc2d80aa",
+      "threshold": 0.03
+    },
+    "numerical_reports": {
+      "adaptive_pricer": {
+        "cache_key": "a46f64dc9cd2c32b37b0586c65ecd14c05fd42279d7cb211ee802e88f2270790",
+        "sha256": "3db071c60f5c034cb2582490fe9b866e9d2b5def9118533a31521a409811da0c"
+      },
+      "diagnostics": {
+        "cache_key": "7f431e2185f97bdc50bde1a11d7e5f7ba117d7361695221cbe5907f1377d7e76",
+        "sha256": "f4df435c404aae606f50a7e2464a3ce75fcefe7fa70fe3c968527fd05f463564"
+      },
+      "fixed_pricer": {
+        "cache_key": "99cd8f37d35c4c8bdd20789b0d884d64991d11f27497712e42dd9aeeb40ec99b",
+        "sha256": "3ca3e0276faa3953399145ff5ef3dbca90f03fcbff751b02cbfa9614ee1799b7"
+      }
+    }
+  },
+  "files": {
+    "config/calibration.yaml": "29e082fc89d34b162f43ce045670ad7b050c521455c9617307a453d3ae678415",
+    "config/data.yaml": "be3a8c5a8ee0d4b4c1283ee979509383c40aa3e55247464f32949e2113160c83",
+    "config/data_numerics.yaml": "d9a9510a47a06fc0fcd721e52ed07af6fcc2d1181ae8f76aa2de6ad434c281ee",
+    "config/diagnostics.yaml": "92e924a0dc7163907b41486eec6b999ead342f898e8f602a23eded96da02c7c4",
+    "config/eval_protocol.yaml": "da1f11c2ea44b2c28efe41b868c73f5877f28280b707a917516531aba29658af",
+    "config/training.yaml": "b411a7f9ad7cc84b72754c9e413cf17d68874db4f918a764586cc279c01fb4a2",
+    "src/nop/eval/interpolation.py": "d33a64674467ec16f066beaf33999c5eb5b28f74414f2073dca3dc0a83e7df46",
+    "src/nop/train/coordinates.py": "195ad02169206da7226d9fd2b918d3797a30d46cc7376c275a58e95f200c599b"
+  },
+  "gate": "G1",
+  "holdouts": "sealed; model/checkpoint freezing at T3.4 is still required",
+  "model_freeze_complete": false,
+  "protocol_version": 1,
+  "version": 1
+}

@@ -152,3 +152,31 @@ unresolved quotes receive explicit source-convergence failures. The original
 T1.3 IV tolerances and conditioning floor remain unchanged. The corresponding
 configs are unfrozen and the actual training/validation coverage still governs
 the pre-freeze stop rule. Production outcomes are recorded in the data card.
+
+## 2026-11-02 — T1.5 pre-freeze provenance reconciliation
+
+Before this freeze, T1.4's complete data archives embedded draft protocol hash
+`140835528b7c41f255458e21d0c1b739978c50c99d93cb29549faa358f289276`.
+Completing the declared training, interpolation, diagnostic, and calibration
+prerequisites necessarily changed the protocol bytes. No frozen file was changed:
+no frozen JSON manifest existed when the migration ran.
+
+Already-seen results were the T1.1–T1.4 numerical studies and train/validation
+coverage documented above, plus the explicit T1.5 numerical fixtures. No model,
+test, or OOD result had been seen. Data recipes, units, generator code, label
+settings, data.yaml bytes, and masks were unchanged.
+
+`scripts/rebind_data_protocol.py` verified the source dataset and replaced only
+embedded protocol-hash metadata in a new directory. Every other array's dtype,
+shape, raw bytes (including NaNs), and serialized NPY bytes were identical.
+The original directory is retained locally at `data/heston_v1_t14`; the verified
+migrated directory is now `data/heston_v1`. Archive hashes changed from combined
+`50df50f75c727f238e6db44cb57fe44d6173b8f0a80921de8dc0e2b5f452efc7` to
+`9120ef79ac2c385618cad182ae55d18212b34a591a0579c864fb0d58874797d7`.
+The separate `protocol_migration.json` preserves the proof and old/new identities.
+
+A full cached data replay regenerated normalization/summary metadata and retained
+the migrated hash; the migration verifier rechecked it against the original.
+This is explicitly a metadata migration and cached replay, not a second full cold
+label generation. Historical T1.4 evidence remains in docs/data-hashes.json;
+Gate 1 identities are recorded separately in frozen/manifest.json.
