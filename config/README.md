@@ -18,7 +18,15 @@ and center diagnostic, including both calls and puts. Run
 reports masks, price roundtrips, and selected/reference COS discrepancies.
 This is a numerical study, not a training/validation sample or frozen IV policy.
 
-T1.4 will create `data.yaml`; T1.5 will freeze it and this protocol only after the
+[data.yaml](data.yaml) implements the draft's training/validation recipes and
+records holdout recipes without generating them. It sets adaptive COS effort,
+per-label convergence checks, IV masks, and deterministic chunk/worker settings.
+[data_numerics.yaml](data_numerics.yaml) controls the wider fixed-resolution
+prerequisite study; `scripts/validate_adaptive_labels.py` independently checks
+the adaptive grid implementation against fixed quote pricing. `make data`
+requires both numerical checks to pass with matching cache identities.
+
+T1.5 will freeze `data.yaml` and this protocol only after the
 `required_before_G1_freeze` list is resolved. Model configurations and selected
 checkpoints are frozen at T3.4. No test/OOD data may inform these choices.
 
@@ -53,8 +61,9 @@ z and maturity. Calendar comparisons hold k fixed, not the z index.
 
 The wider and corner sets need not be mutually disjoint; each is reported
 separately. Rejection retains the first accepted Sobol points without reseeding.
-Seeds and offsets specify recipes, not existing datasets. No training/validation
-reference failure rate has been measured. The proposed Gate 1 stop threshold is 3% overall
+Holdout seeds and offsets remain recipes, not existing holdout datasets.
+Training/validation coverage is recorded in the [data card](../docs/data-card.md).
+The Gate 1 stop threshold is 3% overall
 or at any maturity on training/validation data.
 
 For query generalization, train on alternating strike coordinates at every native

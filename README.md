@@ -5,16 +5,18 @@ surrogates for synthetic Heston implied-volatility surfaces, then evaluate their
 use in calibration. Accuracy, tail errors, invalid quotes, arbitrage, Greeks,
 speed, and variability across seeds are part of the planned comparison.
 
-**Status: Gate 0 complete; T1.1–T1.3 pricing and IV inversion checks complete.
-No Heston dataset, trained model, or experimental benchmark result exists yet.**
-The corner study exposes remaining COS accuracy and coverage issues, recorded
-in the [IV validation notes](docs/iv-validation.md).
+**Status: T1.4 complete: 200,000 training and 20,000 validation surfaces generated
+and verified. No trained model or experimental benchmark result exists yet.**
+The T1.3 corner study exposed COS accuracy issues. T1.4's wider-resolution
+validation and per-label convergence policy are recorded in the
+[data card](docs/data-card.md); the earlier [IV validation record](docs/iv-validation.md)
+is preserved.
 [PLAN.md](PLAN.md) defines the
 sequential gates; [TODO.md](TODO.md) records verified progress. Start with the
 [reading index](docs/reading/README.md) for the eight core papers and source
 limitations. The [protocol draft](config/eval_protocol.yaml) and its
 [design notes](config/README.md) specify targets, OOD recipes, and unresolved
-freeze requirements. Next is T1.4, reproducible training/validation data and masks.
+freeze requirements. Next is T1.5, completing the protocol checklist and freezing verified configs.
 Track B and the demo are optional.
 
 ## Setup and verification
@@ -143,6 +145,23 @@ coverage, measured roundtrip errors, and limitations. A good roundtrip verifies
 inversion of the supplied price; it does not certify that price's accuracy.
 The settings above are numerical-study choices, not frozen production defaults.
 
+## Training and validation data
+
+`make data` validates the numerical prerequisites, then generates the configured
+200,000 training and 20,000 validation surfaces. Each surface retains all 8×15
+quote positions, including NaN failed IVs and explicit reason codes. COS effort
+increases until separate series/interval comparisons pass, or a numerical failure
+is recorded. Parameter and target normalization use valid training data only.
+
+The command saves deterministic chunks, verifies existing hashes, and resumes
+interrupted runs. It refuses stale or corrupt caches and exits with a stop message
+if invalid reference coverage exceeds 3% overall or at any maturity. Test/OOD
+recipes remain unmaterialized until the final evaluation gate.
+
+See the [data card](docs/data-card.md) for coverage, numerical limits, hashes,
+reproduction evidence, and environment; [data/README.md](data/README.md) explains
+storage and independent cold regeneration. No configuration is frozen yet.
+
 ## Reproducible randomness
 
 Use `nop.reproducibility.seed_everything(seed)` before constructing models or
@@ -163,12 +182,11 @@ concerns; the utility does not pretend to change them retroactively.
 | --- | --- |
 | `make install` | Install the package and development tools |
 | `make check` | Formatting, lint, typing, and tests |
-| `make data` | Exits with an explicit pending-ticket error until T1.4 |
+| `make data` | Validate numerics; generate/resume and verify training/validation data |
 | `make final-eval` | Always refuses at this stage; evaluation and frozen-hash verification arrive at T3.4 |
 | `make reproduce` | Exits with an explicit pending-ticket error until T7.2 |
 
-No placeholder command generates data or results. Gate 1 must validate the
-Heston pricer before labels are generated. Final evaluation may only open test
+Data generation requires passing numerical validation first. Final evaluation may only open test
 and OOD sets after the Gate 3 freeze and successful frozen-hash verification.
 Training and model selection must use training and validation data only.
 

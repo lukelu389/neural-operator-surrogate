@@ -8,7 +8,7 @@ help:
 	@echo "test        Run the test suite"
 	@echo "lint        Check formatting and lint"
 	@echo "typecheck   Check public Python types"
-	@echo "data        Generate datasets (available at T1.4)"
+	@echo "data        Generate and verify training/validation datasets"
 	@echo "final-eval  Evaluate frozen models (available at T3.4)"
 	@echo "reproduce   Rebuild headline results (available at T7.2)"
 

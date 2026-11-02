@@ -112,3 +112,26 @@
 - All 7,436 accepted fixtures repriced within 1e-10 times scale; normalized roundtrip p99/max were 2.8712245e-11/3.9618718e-11. All 484 failures remain reported, including 92 upstream COS failures; cache reuse and denominator totals were verified.
 - Across 7,824 comparable quotes, selected/finer COS price differences have p99/max 1.1055590e-6/2.3415801e-6; 308 accepted quotes exceed 1e-8. These are unresolved source-price findings, not inversion failures or experimental performance claims.
 - CPU float64, macOS arm64, Python 3.12.7, NumPy 2.5.4, PyTorch 2.14.1, PyYAML 6.0.3; complete methods and coverage are in docs/iv-validation.md. No dataset, model, frozen manifest, or holdout changed.
+
+## 2026-11-01 — T1.4
+
+- Preserve the predeclared parameter box, 200k/20k train/validation counts, Sobol seed/windows, and grid; materialize no test/OOD data and retain their recipes only.
+- Resolve the T1.3 source-pricing discrepancy by increasing interval width and series resolution, recording the already-seen failures before refinement; do not narrow the problem or weaken IV masks.
+- Validate fixed N=16384/L=64 against N=32768/L=80 across corner fixtures and check the characteristic function with independent Riccati integration before producing training labels.
+- Add a grid adapter sharing existing CF/cumulant primitives to avoid recomputing the characteristic function for every strike; preserve original pricers and test exact quote/grid agreement.
+- Use per-surface adaptive N with separate N/width comparisons and both price and price-discrepancy/vega tolerances; retain explicit source-nonconvergence masks at the cap rather than assuming uniform fixed-setting accuracy.
+- Independently compare adaptive labels with fixed quote pricing on all corner/center put fixtures; require every accepted adaptive label to have a valid reference and pass actual-IV as well as price checks.
+- Keep all parameter rows and quote positions, use NaN for failed IVs, and report status/coverage by maturity and moneyness; never resample difficult parameters.
+- Fit population moments on valid training quotes only, storing coordinate counts; reject zero-variance or all-invalid coordinates instead of borrowing validation statistics.
+- Store deterministic chunk archives with fixed ZIP metadata and config/source/environment identities; verify bytes and canonical manifest paths before loading or resuming.
+- Generate independent chunks with four processes and one thread each; rebuild tensors inside workers to avoid restricted shared-memory IPC, while preserving serial/parallel artifact equality.
+- Require both numerical validators and exact data/protocol agreement before generation; leave all protocol freezes and final-evaluation implementation to their designated tickets.
+- Add no dependency; preserve generated artifacts outside Git and commit scripts, configuration, data-card evidence, and reproducibility hashes.
+
+### Verification
+
+- Both numerical prerequisites passed: fixed accepted-label maximum normalized price discrepancy 1.891e-11; adaptive/fixed maximum 2.133e-13 with zero validity-mask disagreements. Original T1.3 results remain preserved.
+- Generated 200,000 training and 20,000 validation surfaces; all 26.4 million attempted quotes are retained. Mask rates are 0.254571% and 0.252625%, with every maturity below 3%; the worst individual training coordinate is 3.0165% and is reported separately.
+- Full cached replay preserved the dataset hash, and four cold production chunks totaling 608 surfaces were byte-identical; independent cold synthetic and serial/parallel tests also passed. A second full cold 220k generation was not performed.
+- `make check` passed Ruff, strict mypy (25 source files), and 459 tests; one CUDA check was skipped. No holdout access or freeze occurred. Detailed hashes, summaries, and environment are in docs/data-hashes.json.
+- The complete draft-protocol hash is embedded in current chunks. Resolving T1.5 protocol placeholders therefore requires documented provenance reconciliation before freeze; do not silently accept a stale cache.

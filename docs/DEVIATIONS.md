@@ -118,3 +118,37 @@ The full report is retained locally in `reports/tables/iv_validation.json`;
 its reproducible config hash is
 `cfc93551d31a7665d3e4601d27f605567b5aff07888374f004a37f6b33f92a7c`.
 No training, validation, test, or OOD data was generated or accessed.
+
+## 2026-11-01 — T1.4 numerical refinement before dataset production
+
+No frozen file, grid, parameter range, split count, sampling seed, IV mask,
+or coverage-stop threshold changed. T1.3 had already observed a 6.1111%
+corner-stress mask rate and maximum selected/finer normalized price discrepancy
+2.341580127428189e-6; its original config and report remain preserved.
+
+Investigation at v0=theta=0.01, kappa=0.5, sigma=1, rho=-0.95, T=2, forward ATM
+showed both truncation and series errors. At N=16384, prices for L=28/36/44/52/64/80
+were approximately 0.017432250350 / 0.017434592764 / 0.017434751004 /
+0.017434761315 / 0.017434761994 / 0.017434762053. Increasing N alone at L=28
+did not remove the interval bias; widening the interval also required more terms.
+
+The new fixed study uses N=16384/L=64 versus N=32768/L=80. It retained all
+7,920 attempts and all 476 IV failures; the 7,444 accepted quotes passed the
+price and price-discrepancy/vega criteria. Maximum normalized price discrepancy
+was 1.890298681472835e-11 and maximum discrepancy/vega was
+4.5003117390320336e-8 decimal IV. Independent Riccati integration and step
+refinement passed. These are fixture checks, not a universal error certificate.
+
+Before production generation, the adaptive grid labeler was separately checked
+against fixed N=32768/L=80 quote pricing over 3,960 deterministic put fixtures.
+All 3,722 accepted labels passed, with zero validity-mask disagreements; 238
+failures remained in the denominator. The config, source hashes, actual thread
+setting, and results are retained in `reports/tables/adaptive_labels.json`.
+
+Adaptive refinement changes numerical effort only: compare N and 2N at L=64,
+then 2N at L=80, through a finest cap of 32768. Accept labels only when both
+normalized price discrepancy <=1e-8 and discrepancy/vega <=1e-5 decimal IV;
+unresolved quotes receive explicit source-convergence failures. The original
+T1.3 IV tolerances and conditioning floor remain unchanged. The corresponding
+configs are unfrozen and the actual training/validation coverage still governs
+the pre-freeze stop rule. Production outcomes are recorded in the data card.

@@ -132,3 +132,26 @@ full shape, explicit reason codes, and NaN IVs; use the common reference mask
 for every model. Report all attempted quotes in the denominator, including
 upstream pricing failures, with maturity/moneyness breakdowns. Deterministic
 corner-fixture failure fractions are stress diagnostics, not population rates.
+
+## T1.4 — Reproducible data and numerical coverage
+
+**How do you make a dataset reproducible without leaking holdouts?** Declare
+separate nonoverlapping Sobol windows, seek directly to train/validation slices,
+and leave test/OOD as recipes until final evaluation. Record seeds, configuration,
+source/environment identities, and hashes. Fixed archive metadata makes cold
+serial/parallel output byte-identical; cache hashes detect corruption rather
+than disguising it as a successful rerun.
+
+**Why validate both N and interval width for every accepted label?** Series
+resolution and tail truncation are different errors; refining only one can
+appear converged while retaining bias. Compare both, relate price discrepancies
+to vega, and verify the adaptive implementation against an independent fixed
+quote-pricing path. These diagnostics support a numerical policy but are not
+rigorous universal error bounds. Preserve unresolved quotes with explicit masks.
+
+**What prevents normalization leakage or mask bias?** Fit parameter and per-grid
+IV moments using training data only, retaining valid counts and rejecting
+undefined statistics. Apply those fixed moments to validation. Do not resample
+failed surfaces or silently drop quote positions; report coverage by maturity
+and moneyness and use identical reference masks across architectures. Reduced
+data and withheld-coordinate experiments must fit their own allowed statistics.

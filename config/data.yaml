@@ -1,0 +1,147 @@
+# T1.4 draft; holdout recipes only, never materialize holdouts here.
+version: 1
+scope: synthetic_heston_train_validation_only
+data_design:
+  parameter_order:
+  - v0
+  - kappa
+  - theta
+  - sigma
+  - rho
+  id_box:
+    v0:
+    - 0.01
+    - 0.25
+    kappa:
+    - 0.5
+    - 5.0
+    theta:
+    - 0.01
+    - 0.25
+    sigma:
+    - 0.1
+    - 1.0
+    rho:
+    - -0.95
+    - -0.1
+  impose_feller_condition: false
+  sampler: scrambled_sobol
+  id_stream_seed: 1729
+  id_splits:
+    train:
+      offset: 0
+      count: 200000
+    validation:
+      offset: 200000
+      count: 20000
+    test:
+      offset: 220000
+      count: 20000
+  main_grid:
+    maturity_year_fractions:
+    - - 1
+      - 12
+    - - 2
+      - 12
+    - - 3
+      - 12
+    - - 6
+      - 12
+    - - 9
+      - 12
+    - - 1
+      - 1
+    - - 3
+      - 2
+    - - 2
+      - 1
+    z_linspace:
+      start: -2.5
+      stop: 2.5
+      count: 15
+    k_scale: 0.2
+    order: maturity_major_then_increasing_z
+  normalization_fit_split: train_only
+  target_normalization: per_grid_point_valid_training_quotes_only
+  ood_sets:
+    wider_parameters:
+      count: 20000
+      seed: 1730
+      grid: main_grid
+      inherit_box: id_box
+      override_box:
+        kappa:
+        - 0.1
+        - 7.5
+        sigma:
+        - 0.1
+        - 1.5
+      accept_if: kappa < 0.5 or kappa > 5.0 or sigma > 1.0
+    short_maturities:
+      count: 20000
+      seed: 1731
+      parameter_box: id_box
+      maturity_year_fractions:
+      - - 1
+        - 52
+      - - 2
+        - 52
+      z_grid: main_grid.z_linspace
+      k_scale: 0.2
+    parameter_corners:
+      count: 20000
+      seed: 1732
+      grid: main_grid
+      inherit_box: id_box
+      override_box:
+        kappa:
+        - 0.1
+        - 0.5
+        sigma:
+        - 1.0
+        - 1.5
+        rho:
+        - -0.99
+        - -0.95
+      accept_if: kappa < 0.5 or sigma > 1.0 or rho < -0.95
+  rejection_sampling: keep_first_accepted_in_sobol_order_no_reseeding
+units:
+  spot: 1.0
+  rate: 0.02
+  dividend_yield: 0.0
+labels:
+  option_type: put
+  term_levels:
+  - 512
+  - 1024
+  - 2048
+  - 4096
+  - 8192
+  - 16384
+  width: 64.0
+  reference_width: 80.0
+  price_rtol: 1.0e-08
+  iv_error_tolerance: 1.0e-05
+  iv:
+    price_atol: 0.0
+    price_rtol: 1.0e-10
+    iv_atol: 1.0e-10
+    min_normalized_vega: 0.0001
+    volatility_upper: 5.0
+    max_iterations: 100
+storage:
+  output: data/heston_v1
+  chunk_size: 256
+  pricing_batch_size: 16
+  torch_threads: 1
+  workers: 4
+normalization:
+  fit_split: train
+  variance_ddof: 0
+  invalid_iv: NaN
+  zero_variance: error
+validation:
+  numerics_config: config/data_numerics.yaml
+  numerics_report: reports/tables/data_numerics.json
+  max_invalid_fraction: 0.03
+  scope: train_and_validation_overall_and_each_maturity

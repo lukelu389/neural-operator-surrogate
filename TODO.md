@@ -57,9 +57,14 @@ One ticket per session. Tick when the exit criteria in PLAN.md are met. Add hand
     - `make check` passed Ruff, strict mypy (17 source files), and 346 tests; one CUDA check was skipped. Cache reuse and report denominators passed; the existing editable installation was repaired without dependency changes.
     - COS selected/finer-resolution differences reach 2.342e-6 times price scale; 308 accepted quotes exceed 1e-8. See docs/iv-validation.md and docs/DEVIATIONS.md. A successful roundtrip does not certify Heston label accuracy, and these settings must not be frozen as-is.
     - Next T1.4 must first investigate source-price convergence before generating production labels, then measure actual training/validation mask coverage before T1.5's stop check. No research split or holdout was created/read; the 6.11% deterministic stress rate is not a population estimate.
-- [ ] T1.4 Sampling, grids, splits, OOD sets, normalization, data card
+- [x] T1.4 Sampling, grids, splits, OOD sets, normalization, data card
   - Done when: `make data` reproduces identical hashes
   - Handoff notes:
+    - 2026-11-01: Added validated adaptive COS labels, deterministic Sobol/grid utilities, resumable hashed chunks, strict masks, training-only normalization, and a data card; `make data` generates only train/validation and keeps test/OOD recipes inert.
+    - Generated 200,000/20,000 surfaces. Mask rates are 0.254571%/0.252625%; every maturity passes 3%. The worst train coordinate is 3.0165% masked and is disclosed. All 26.4 million attempted quotes remain accounted for.
+    - A full cached replay and four cold production-chunk regenerations preserve hashes; combined SHA-256 is 50df50f75c727f238e6db44cb57fe44d6173b8f0a80921de8dc0e2b5f452efc7. See docs/data-card.md and docs/data-hashes.json; a second full cold replay was not run.
+    - `make check` passed Ruff, strict mypy (25 sources), and 459 tests, with one CUDA skip. Both fixed/adaptive numerical prerequisite studies pass. No dependency was added; generated datasets/reports remain ignored by Git.
+    - Next: T1.5, completing every freeze checklist item. Current archives embed the whole draft protocol hash: resolve subsequent provenance changes explicitly with regeneration or verified metadata migration before freezing. No test/OOD data, model training, or frozen manifest was created.
 - [ ] T1.5 Freeze protocol v1 (hashes in frozen/)
   - Done when: frozen files committed; stop rule on failure mask checked
   - Handoff notes:
