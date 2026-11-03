@@ -89,6 +89,10 @@ One ticket per session. Tick when the exit criteria in PLAN.md are met. Add hand
 - [ ] T2.2 M0 MLP with tuning budget, 3 seeds
   - Done when: validation metrics, learning curve, error heatmaps; stop rule checked
   - Handoff notes:
+    - 2026-11-03 implementation: fixed a 1,013,160-parameter M0 before production trials, added exact twelve-draw orchestration, three-seed reporting, lock-protected resume, and validation-only figures. Code is committed before training; no budget or frozen file changed.
+    - Run `.venv/bin/python scripts/train_m0.py`; repeat the same command after interruption, preserving runs/m0_v1. No extra trial-count option exists; selected-config and cache drift are refused. See docs/m0-baseline.md.
+    - Pre-production verification: `make check` passed Ruff, strict mypy (40 sources), and 783 tests, with one CUDA skip; all eight frozen hashes verify.
+    - Production results remain pending. Keep this ticket unchecked until all declared trials, three seeds, plots, and the frozen validation stop check are verified; never advance to T3.1 on implementation alone.
 
 
 

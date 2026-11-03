@@ -1,0 +1,16 @@
+# Fixed before the first M0 trial; architecture/checkpoint freeze occurs at T3.4.
+version: 1
+model_id: M0
+architecture: MLP
+input_features: 5
+hidden_widths: [560, 560, 560, 560]
+activation: SiLU
+native_grid_shape: [8, 15]
+output_parameterization: softplus_decimal_IV_then_training_standardization
+initialization:
+  hidden: torch_Linear_default
+  output_weight: zeros
+  output_bias: inverse_softplus_training_target_mean
+nominal_parameters: 1000000
+trainable_parameters: 1013160
+# M1-M3 will use the same positive-IV output contract; training.yaml is unchanged.

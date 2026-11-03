@@ -1,0 +1,26 @@
+# T2.2 execution and reporting; model choices fixed before production trials.
+version: 1
+model_config: config/m0.yaml
+training_policy: config/training.yaml
+evaluation_protocol: config/eval_protocol.yaml
+dataset: data/heston_v1
+output: runs/m0_v1
+report: reports/tables/m0_validation.json
+selected_config: config/m0_selected.yaml
+figures: reports/figures/m0
+tracking_directory: mlruns
+experiment_name: T2.2_M0_validation
+device: cpu
+torch_threads: 4
+stop_assessment:
+  tuning: after_all_twelve_terminal_trials_compare_selected_trial_validation_MAE_to_frozen_stop_threshold
+  tuning_failure: stop_before_seed_retraining_and_other_architectures_no_extra_trials
+  final: all_three_seeds_succeed_and_mean_validation_MAE_within_same_threshold
+  failed_seed: fail_gate_no_best_seed_or_complete_case_average
+reporting:
+  units: vol_points
+  aggregation: per_seed_then_arithmetic_mean_and_sample_std_ddof_1
+  heatmap: mean_per_seed_validation_MAE_per_maturity_z_cell
+  learning_curves: all_tuning_trials_and_all_final_seeds
+  inference_batch_size: 256
+  figure_dpi: 160

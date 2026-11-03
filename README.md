@@ -17,7 +17,8 @@ sequential gates; [TODO.md](TODO.md) records verified progress. Start with the
 limitations. The [frozen protocol](config/eval_protocol.yaml) and its
 [design notes](config/README.md) specify targets, OOD recipes, and shared budgets.
 The [freeze record](docs/protocol-freeze.md) explains evidence and verification.
-Next is T2.2, the M0 baseline with its frozen tuning budget and validation stop check.
+T2.2 now has a verified [M0 runner](docs/m0-baseline.md); its production
+experiments and validation stop check remain pending.
 Track B and the demo are optional.
 
 ## Setup and verification

@@ -173,3 +173,17 @@
 - Reconstruction MAE/RMSE/p99/max were 0.02094764/0.02923971/0.09757364/0.25949031 vol points; no prediction failed. These are same-training-row results, not validation/test performance or architecture comparisons.
 - The controlled linear fixture decreased every step, from 0.234375 to 2.0502360070552507e-8. Nonlinear AdamW monotonicity is not claimed.
 - Cached replay preserved report bytes, checkpoint SHA, MLflow run ID, and exactly 5,000 loss records without another optimizer update. Frozen-file verification still passes; no validation or holdout dataset was read by the sanity command.
+
+## 2026-11-02 — T2.2 (in progress; preregistration before production trials)
+
+- Fix M0 to four width-560 SiLU hidden layers (1,013,160 trainable parameters) before seeing production validation scores; select dimensions from the nominal parameter budget, not accuracy.
+- Parameterize decimal IV by softplus and then standardize it with saved training moments; initialize zero output weights and inverse-softplus(training mean) bias. This is an architectural positivity constraint, not clipping predictions or changing masks. Use the same output contract for M1–M3.
+- Use all twelve predeclared paired PCG64 draws in order, including failed trials. Check the selected tuning-seed validation MAE against 0.2 only after the full budget; if it fails, stop without extra tuning or seed retraining. After passing, require all three final seeds and their mean validation MAE to pass that same threshold before Gate 3.
+- Commit verified runner/model code before launching production trials to make the architecture and budget reviewable. Preserve every terminal run, log, checkpoint hash, and failure; never replace a failed draw.
+- Add Matplotlib only for the required static learning curves and maturity/moneyness error heatmaps. Plot validation results with all seeds and explicit missing/failure cases; never imply independent test performance.
+
+### Implementation verification before production
+
+- `make check` passed Ruff, strict mypy (40 source files), and 783 tests; one CUDA test was skipped. Synthetic integration checks verify all twelve trials precede selection, stop conditions prevent new seed runs, failed seeds are not replaced, and aggregates use all three required seeds.
+- Matplotlib 3.11.2 produces static Agg figures; synthetic full-grid and missing-seed figures were visually inspected. Existing numerical dependencies remain unchanged. The new plotting dependency is confined to reporting.
+- All eight Gate 1 frozen hashes still verify. No production M0 training or validation score had been observed when this implementation was committed; its first run must start from this recorded code/configuration.
