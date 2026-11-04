@@ -1,0 +1,19 @@
+# T3.1 fixed M1 execution settings; shared training policy is frozen at T1.5.
+version: 1
+model_config: config/m1.yaml
+training_policy: config/training.yaml
+evaluation_protocol: config/eval_protocol.yaml
+dataset: data/heston_v1
+output: runs/m1_v1
+report: reports/tables/m1_validation.json
+selected_config: config/m1_selected.yaml
+figures: reports/figures/m1
+tracking_directory: mlruns
+experiment_name: T3.1_M1_validation
+device: cpu
+torch_threads: 4
+reporting:
+  units: vol_points
+  aggregation: per_seed_then_arithmetic_mean_and_sample_std_ddof_1
+  inference_batch_size: 256
+  figure_dpi: 160

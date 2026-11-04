@@ -1,0 +1,24 @@
+# T3.1 fixed by parameter count and coordinate/shape checks before validation runs.
+version: 1
+model_id: M1
+architecture: deeponet_branch_parameter_trunk_coordinate_dot_product
+branch_input_features: 5
+trunk_inputs: [forward_log_moneyness_k, maturity_years]
+trunk_coordinate_scales:
+  k: 0.7071067811865476
+  maturity_years: 2.0
+hidden_widths: [480, 480, 480]
+activation: SiLU
+initialization: torch_linear_default_seeded
+rank: 128
+dot_product_scale: 0.08838834764831845
+scalar_output_bias: true
+parameter_count: 1050977
+nominal_parameters: 1000000
+parameter_budget_relative_to_M0: 0.037325792569781635
+output:
+  positive_decimal_iv: softplus
+  standardization: training_coordinate_moments_bilinear_mean_log_std
+  normalization_k_scale: 0.2
+  clipping: none
+native_grid_shape: [8, 15]

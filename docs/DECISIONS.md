@@ -188,6 +188,12 @@
 - Report metrics per seed before aggregation and retain p99/max alongside MAE. The three-seed mean maximum error is 1.237196 vol points, so tails remain material despite the low mean. All 6,063 reference failures per validation surface remain in the attempted denominator; no model predictions failed on valid quotes.
 - Keep generated reports, predictions, figures, checkpoints, and MLflow state out of Git; commit the selected hyperparameter config and human-readable result record with its ignored report/figure hashes. A cached rerun must verify identity without updates.
 
+## 2026-11-04 — T3.1 M1 architecture before production trials
+
+- Fix DeepONet branch/trunk widths at 480, three hidden layers per tower, and rank 128 based only on parameter arithmetic: 1,050,977 trainable parameters, 3.73% above the selected M0 count. Do not change architecture after seeing M1 validation scores.
+- Feed the five training-standardized Heston parameters to the branch and fixed scaled forward log-moneyness/maturity coordinates to the trunk. Use a rank-scaled dot-product score, positive decimal IV via softplus, then the same training-only coordinate mean/log-standard-deviation normalization and reference masks as M0. No coordinate labels or moments are fit from validation.
+- Reuse the exact frozen optimizer/schedule, paired PCG64 search draws, three seeds, and failure accounting. Keep all model selection validation-only; this stage has no additional stopping threshold and cannot open test/OOD data.
+
 ### Implementation verification before production
 
 - `make check` passed Ruff, strict mypy (40 source files), and 783 tests; one CUDA test was skipped. Synthetic integration checks verify all twelve trials precede selection, stop conditions prevent new seed runs, failed seeds are not replaced, and aggregates use all three required seeds.

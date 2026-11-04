@@ -104,6 +104,10 @@ One ticket per session. Tick when the exit criteria in PLAN.md are met. Add hand
 - [ ] T3.1 M1 DeepONet-style (parameter count within 10% of M0, tests)
   - Done when: trained with the same tuning budget
   - Handoff notes:
+    - 2026-11-04 implementation: fixed M1 before validation as a branch(theta)/trunk(k,T) DeepONet with three 480-wide SiLU hidden layers per tower, rank 128, and inverse-square-root-rank dot-product scaling. It has 1,050,977 trainable parameters (3.73% above selected M0); parameter count is checked against M0's selected config at runtime.
+    - `scripts/train_m1.py` uses the same verified train/validation data, frozen AdamW schedule, exact paired twelve-trial draws, trial-failure accounting, three selected-config seeds, local MLflow, resumable checkpoints, and validation-only reports. Run `.venv/bin/python scripts/train_m1.py`; repeat the same command to resume. `--tune-only` stops after all twelve trials.
+    - Model tests cover native/query shapes, coordinate permutation behavior and gradients, positive-IV output, serialized normalization buffers, exact parameter count, and the ±10% M0 budget. Synthetic runner coverage verifies all twelve trials precede the three seeds and the selected hyperparameters are reused.
+    - Implementation `make check` passed Ruff, strict mypy (42 sources), and 791 tests; one CUDA check was skipped. All eight frozen hashes verify. Production trials have not started; no validation score or holdout was read for architecture design.
 - [ ] T3.2 M2 Transformer
   - Done when: trained with the same tuning budget
   - Handoff notes:
