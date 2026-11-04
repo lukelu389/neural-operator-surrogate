@@ -174,13 +174,19 @@
 - The controlled linear fixture decreased every step, from 0.234375 to 2.0502360070552507e-8. Nonlinear AdamW monotonicity is not claimed.
 - Cached replay preserved report bytes, checkpoint SHA, MLflow run ID, and exactly 5,000 loss records without another optimizer update. Frozen-file verification still passes; no validation or holdout dataset was read by the sanity command.
 
-## 2026-11-02 — T2.2 (in progress; preregistration before production trials)
+## 2026-11-02 — T2.2 (M0 preregistration and implementation)
 
 - Fix M0 to four width-560 SiLU hidden layers (1,013,160 trainable parameters) before seeing production validation scores; select dimensions from the nominal parameter budget, not accuracy.
 - Parameterize decimal IV by softplus and then standardize it with saved training moments; initialize zero output weights and inverse-softplus(training mean) bias. This is an architectural positivity constraint, not clipping predictions or changing masks. Use the same output contract for M1–M3.
 - Use all twelve predeclared paired PCG64 draws in order, including failed trials. Check the selected tuning-seed validation MAE against 0.2 only after the full budget; if it fails, stop without extra tuning or seed retraining. After passing, require all three final seeds and their mean validation MAE to pass that same threshold before Gate 3.
 - Commit verified runner/model code before launching production trials to make the architecture and budget reviewable. Preserve every terminal run, log, checkpoint hash, and failure; never replace a failed draw.
 - Add Matplotlib only for the required static learning curves and maturity/moneyness error heatmaps. Plot validation results with all seeds and explicit missing/failure cases; never imply independent test performance.
+
+## 2026-11-04 — T2.2 validation outcome
+
+- Preserve all twelve terminal draws, including trial_00 and trial_04 prediction failures; do not refill the budget. Trial_02 passed the selected-run MAE threshold and the three-seed mean validation MAE was 0.021973 vol points, below the frozen 0.2 stop. This authorizes T3.1 only; it does not change the final targets or establish test/OOD performance.
+- Report metrics per seed before aggregation and retain p99/max alongside MAE. The three-seed mean maximum error is 1.237196 vol points, so tails remain material despite the low mean. All 6,063 reference failures per validation surface remain in the attempted denominator; no model predictions failed on valid quotes.
+- Keep generated reports, predictions, figures, checkpoints, and MLflow state out of Git; commit the selected hyperparameter config and human-readable result record with its ignored report/figure hashes. A cached rerun must verify identity without updates.
 
 ### Implementation verification before production
 

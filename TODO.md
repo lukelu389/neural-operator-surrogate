@@ -86,13 +86,16 @@ One ticket per session. Tick when the exit criteria in PLAN.md are met. Add hand
     - Cached replay preserved report/checkpoint hashes, the same MLflow run, and exactly 5,000 loss records. Interrupted synthetic training matches uninterrupted weights, optimizer/scheduler, RNG and metric history exactly; no production tuning trial was used.
     - `make check` passed Ruff, strict mypy (36 sources), and 699 tests, with one CUDA skip. Added mlflow-skinny >=3.17.2,<4 for the frozen logger requirement; existing numerical package versions stayed unchanged. See docs/training-loop.md and docs/interview.md.
     - Next: T2.2, define M0 before its first trial, enforce twelve paired search draws, train three selected-config seeds, and check validation MAE <=0.2 vol points before other architectures. CUDA/MPS execution is unverified; no test/OOD access occurred.
-- [ ] T2.2 M0 MLP with tuning budget, 3 seeds
+- [x] T2.2 M0 MLP with tuning budget, 3 seeds
   - Done when: validation metrics, learning curve, error heatmaps; stop rule checked
   - Handoff notes:
     - 2026-11-03 implementation: fixed a 1,013,160-parameter M0 before production trials, added exact twelve-draw orchestration, three-seed reporting, lock-protected resume, and validation-only figures. Code is committed before training; no budget or frozen file changed.
     - Run `.venv/bin/python scripts/train_m0.py`; repeat the same command after interruption, preserving runs/m0_v1. No extra trial-count option exists; selected-config and cache drift are refused. See docs/m0-baseline.md.
     - Pre-production verification: `make check` passed Ruff, strict mypy (40 sources), and 783 tests, with one CUDA skip; all eight frozen hashes verify.
-    - Production results remain pending. Keep this ticket unchecked until all declared trials, three seeds, plots, and the frozen validation stop check are verified; never advance to T3.1 on implementation alone.
+    - Production completed: all 12 paired draws reached terminal states; trial_00 and trial_04 failed for 3,208 and 6,574 nonfinite or nonpositive valid-quote predictions and remained counted. Trial_02 was selected with validation MAE 0.003914 vol points; three final seeds completed with mean MAE 0.021973 ± 0.007027 vol points and mean p99 0.105630 ± 0.031661. The frozen 0.2-vol-point stop rule passed.
+    - Seed-level validation metrics, reference-mask counts, full per-maturity/z/cell metrics, checkpoint/report hashes, and figure hashes are recorded in reports/tables/m0_validation.json (SHA-256 a607995a29f8c82b8991d98799d0f011e07daed37efcb128fc7e51340ac3544); plots are reports/figures/m0/learning_curves.png and validation_error_heatmaps.png. Cached rerun preserved these report and figure hashes and MLflow records.
+    - Final `make check` passed Ruff, strict mypy (40 sources), and 783 tests, with one CUDA skip; all eight frozen protocol hashes verify. See docs/m0-baseline.md for full metrics, coverage, tail errors, failures, and reproduction command.
+    - Next: T3.1 DeepONet-style M1. No test/OOD data was accessed. M0's max validation error is materially larger than its mean (per-seed maxima 1.010–1.600 vol points); validation results are development evidence, not final or market performance.
 
 
 

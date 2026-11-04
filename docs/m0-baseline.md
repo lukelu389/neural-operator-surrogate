@@ -1,8 +1,8 @@
-# T2.2 M0 baseline workflow
+# T2.2 M0 baseline workflow and validation results
 
-The implementation is fixed before production trials. Results are pending; this
-page describes the declared experiment and how to resume it. It does not contain
-independent test evidence.
+The implementation and search budget were fixed before production trials. This
+page records validation-only development evidence; it contains no independent
+test, OOD, or market evidence.
 
 ## Architecture and budget
 
@@ -79,3 +79,44 @@ results. No test/OOD data is opened. The Gate 3 freeze, data-efficiency/withheld
 runs, vega ablation, and final evaluation remain separate future requirements.
 A passed M0 gate permits the next architecture; it does not establish the final
 0.05-vol-point test target, market performance, or an inference speed-up.
+
+## Completed validation results
+
+All twelve paired draws completed or failed terminally, and all failures consumed
+their declared slots. Trial_00 failed after 10 epochs/8,040 optimizer steps with
+3,208 valid-quote predictions reported as nonfinite or nonpositive. Trial_04
+failed after 8 epochs/6,967 steps with 6,574 such predictions. The failure report
+does not distinguish the two causes. No replacement trials were run.
+
+Trial_02 was selected by the declared validation-only ordering. Its learning rate
+was 2.72119067e-4 and weight decay 4.90797956e-3; it completed 100 epochs and
+78,200 optimizer steps. Its validation MAE was 0.003914 vol points (p99 0.027515,
+max 0.531349), passing the frozen 0.2-vol-point tuning stop check. The required
+seeds 11, 29, and 47 all completed and the arithmetic-mean MAE passed the same
+threshold; no seed was replaced or selected as a best seed.
+
+| Seed | Best epoch (completed) | MAE (vol pts) | RMSE (vol pts) | p99 (vol pts) | Max (vol pts) |
+|---:|---:|---:|---:|---:|---:|
+| 11 | 25 (35) | 0.018670 | 0.027138 | 0.085602 | 1.010367 |
+| 29 | 24 (34) | 0.017206 | 0.026384 | 0.089158 | 1.101190 |
+| 47 | 13 (23) | 0.030043 | 0.044777 | 0.142131 | 1.600030 |
+| Mean ± sample SD | — | 0.021973 ± 0.007027 | 0.032766 ± 0.010409 | 0.105630 ± 0.031661 | 1.237196 ± 0.317488 |
+
+Each seed attempted 2,400,000 validation quotes; 2,393,937 were valid and 6,063
+reference quotes failed (0.252625%). All three models had zero prediction
+failures on valid quotes. The worst observed per-seed maximum error was 1.600030
+vol points, so the small mean does not describe tail behavior by itself. The
+0.2-vol-point rule is a Gate 2 permission to proceed, not the separate final
+accuracy target or a guarantee of generalization.
+
+The complete per-seed and per-maturity/z/cell metrics, trial records, selected
+configuration, checkpoint/report hashes, and run IDs are retained in the ignored
+validation report `reports/tables/m0_validation.json` (SHA-256
+`a607995a29f8c82b8991d98799d0f011e07daed37efcb128fc7e51340ac3544`). The static
+figures are `reports/figures/m0/learning_curves.png` (SHA-256
+`18710c1875e7d964a461dc45a6546e2c82f5659b222c3bc2b1409c3911cbb944`) and
+`reports/figures/m0/validation_error_heatmaps.png` (SHA-256
+`a028a053a8060147a3c8a191aa82a9342c2c11bf997fc0eeb36d5fbf66624989`). Repeating
+`.venv/bin/python scripts/train_m0.py` reused completed runs; the report, figure,
+per-run report, MLflow run-ID, and logged training-point identities remained
+unchanged. No test/OOD data was accessed.

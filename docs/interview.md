@@ -202,3 +202,23 @@ architecture. Keep its cap and acceptance criterion fixed, report its actual
 reconstruction error, and leave the production tuning budget and unseen-data
 assessment to later tickets. A nonlinear AdamW trace need not be monotone;
 verify strict descent on a separate controlled convex fixture.
+
+## T2.2 — M0 baseline and fixed tuning budget
+
+**Why count failed trials instead of replacing them?** The twelve draws are the
+declared compute and selection budget. Replacing an unstable draw conditions the
+search on successful training and grants extra optimization effort. M0 retained
+two prediction-failure trials as failures, then selected from the remaining
+terminal records using the preregistered validation ordering.
+
+**What does passing the 0.2-vol-point stop rule mean?** It permits moving to the
+next architecture under Gate 2; it is not the final 0.05-vol-point target. M0's
+three-seed validation mean MAE was 0.021973 vol points, but its mean per-seed
+maximum error was 1.237196 vol points. Both summary and tails matter, and
+validation has already informed model selection.
+
+**How were invalid quotes and seed variability handled?** Every seed attempted
+the same 2.4 million validation quotes; 6,063 reference failures were preserved
+in the denominator, while no valid quote had a prediction failure. Metrics were
+computed per seed and then summarized with arithmetic means and sample standard
+deviations. No predictions were pooled and no best seed was reported.
