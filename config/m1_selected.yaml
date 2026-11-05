@@ -1,0 +1,13 @@
+dataset_hash: 9120ef79ac2c385618cad182ae55d18212b34a591a0579c864fb0d58874797d7
+learning_rate: 0.0003771660758558053
+model_config: config/m1.yaml
+model_config_sha256: 74aedbc041a32a4f53441cd492c23c9270fc317eb3c2bd95a1f8fdd9e520d42a
+model_id: M1
+seeds:
+- 11
+- 29
+- 47
+selected_trial_id: trial_08
+selection: complete_twelve_trial_validation_only_budget_no_retuning
+training_policy: config/training.yaml
+weight_decay: 2.622503937088e-05

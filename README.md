@@ -5,8 +5,8 @@ surrogates for synthetic Heston implied-volatility surfaces, then evaluate their
 use in calibration. Accuracy, tail errors, invalid quotes, arbitrage, Greeks,
 speed, and variability across seeds are part of the planned comparison.
 
-**Status: T2.2 complete: the M0 baseline passed the preregistered validation
-stop rule. Gate 1 is frozen; M1–M3 comparisons and all final holdout evaluation
+**Status: T3.1 complete: M0 and the DeepONet-style M1 have completed validation
+training. Gate 1 is frozen; M2/M3 comparisons and all final holdout evaluation
 remain outstanding.**
 The T1.3 corner study exposed COS accuracy issues. T1.4's wider-resolution
 validation and per-label convergence policy are recorded in the
@@ -21,6 +21,8 @@ The [freeze record](docs/protocol-freeze.md) explains evidence and verification.
 T2.2's [M0 workflow and validation results](docs/m0-baseline.md) record the
 complete tuning budget, all three seeds, failure masks, and tail errors. These
 are validation development results; final test/OOD evaluation remains gated.
+T3.1's [M1 workflow and validation results](docs/m1-baseline.md) record the
+same paired tuning budget, three seeds, reference failures, and tail errors.
 Track B and the demo are optional.
 
 ## Setup and verification

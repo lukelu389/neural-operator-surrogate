@@ -101,13 +101,16 @@ One ticket per session. Tick when the exit criteria in PLAN.md are met. Add hand
 
 ## Gate 3: Architecture comparison
 
-- [ ] T3.1 M1 DeepONet-style (parameter count within 10% of M0, tests)
+- [x] T3.1 M1 DeepONet-style (parameter count within 10% of M0, tests)
   - Done when: trained with the same tuning budget
   - Handoff notes:
     - 2026-11-04 implementation: fixed M1 before validation as a branch(theta)/trunk(k,T) DeepONet with three 480-wide SiLU hidden layers per tower, rank 128, and inverse-square-root-rank dot-product scaling. It has 1,050,977 trainable parameters (3.73% above selected M0); parameter count is checked against M0's selected config at runtime.
     - `scripts/train_m1.py` uses the same verified train/validation data, frozen AdamW schedule, exact paired twelve-trial draws, trial-failure accounting, three selected-config seeds, local MLflow, resumable checkpoints, and validation-only reports. Run `.venv/bin/python scripts/train_m1.py`; repeat the same command to resume. `--tune-only` stops after all twelve trials.
     - Model tests cover native/query shapes, coordinate permutation behavior and gradients, positive-IV output, serialized normalization buffers, exact parameter count, and the ±10% M0 budget. Synthetic runner coverage verifies all twelve trials precede the three seeds and the selected hyperparameters are reused.
-    - Implementation `make check` passed Ruff, strict mypy (42 sources), and 791 tests; one CUDA check was skipped. All eight frozen hashes verify. Production trials have not started; no validation score or holdout was read for architecture design.
+    - Production completed with all 12 paired trials terminal (11 early-stopped, one completed; none failed), then seeds 11/29/47. Trial_08 was selected. Validation mean MAE was 0.016920 ± 0.006073 vol points; mean p99 0.110340 ± 0.028856 and mean per-seed max 1.497752 ± 0.151406. Each seed had 6,063/2,400,000 reference failures (0.252625%) and zero prediction failures. See docs/m1-baseline.md.
+    - Full validation details and figure/report hashes are recorded in ignored reports/tables/m1_validation.json. The initial plots inherited the helper's M0 default title; a post-run figures-only correction regenerated M1-labeled plots from cached validation histories. Checkpoints, predictions, optimizer logs, selections and metrics did not change; `.venv/bin/python scripts/train_m1.py --figures-only` replays that correction idempotently. The original run identity remains the code used for training.
+    - Cached replay before the title correction preserved the report, all 15 run IDs/checkpoints/per-run reports, seed prediction files, figures and MLflow loss counts. Final `make check` passed Ruff, strict mypy (42 sources), and 791 tests, with one CUDA skip; all eight frozen hashes verify.
+    - Next: T3.2 Transformer. No test/OOD data was accessed; M1 validation results are development evidence and do not establish final architecture ranking, the final accuracy target, or market performance.
 - [ ] T3.2 M2 Transformer
   - Done when: trained with the same tuning budget
   - Handoff notes:

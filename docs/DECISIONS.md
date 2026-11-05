@@ -194,6 +194,12 @@
 - Feed the five training-standardized Heston parameters to the branch and fixed scaled forward log-moneyness/maturity coordinates to the trunk. Use a rank-scaled dot-product score, positive decimal IV via softplus, then the same training-only coordinate mean/log-standard-deviation normalization and reference masks as M0. No coordinate labels or moments are fit from validation.
 - Reuse the exact frozen optimizer/schedule, paired PCG64 search draws, three seeds, and failure accounting. Keep all model selection validation-only; this stage has no additional stopping threshold and cannot open test/OOD data.
 
+## 2026-11-05 — T3.1 validation outcome
+
+- Complete the full twelve-draw paired budget and all three declared seeds. Trial_08 was selected on validation; M1's per-seed mean MAE was 0.016920 ± 0.006073 vol points. Report RMSE, p99, max, the 6,063/2,400,000 reference failures per seed, and zero prediction failures alongside it; no final ranking or holdout claim follows from validation selection.
+- Correct the M1-only plot label after discovering that its first static figures inherited the shared helper's default M0 title. Regenerate from the stored validation histories, retain the original training source identity, and record the correction separately in the validation report. Checkpoint, prediction, trial selection, metrics, and MLflow records are unchanged; the report-only command is `.venv/bin/python scripts/train_m1.py --figures-only`.
+- Keep generated figures, reports, predictions, checkpoints, and MLflow artifacts out of Git. Commit the selected M1 configuration, concise result record, artifact hashes, and interview answers. T3.2 is next; test/OOD remain sealed until T3.4.
+
 ### Implementation verification before production
 
 - `make check` passed Ruff, strict mypy (40 source files), and 783 tests; one CUDA test was skipped. Synthetic integration checks verify all twelve trials precede selection, stop conditions prevent new seed runs, failed seeds are not replaced, and aggregates use all three required seeds.

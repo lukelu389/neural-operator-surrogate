@@ -222,3 +222,26 @@ the same 2.4 million validation quotes; 6,063 reference failures were preserved
 in the denominator, while no valid quote had a prediction failure. Metrics were
 computed per seed and then summarized with arithmetic means and sample standard
 deviations. No predictions were pooled and no best seed was reported.
+
+## T3.1 — DeepONet-style M1
+
+**Why scale the branch/trunk dot product by the inverse square root of rank?**
+The unscaled sum's variance grows with the number of latent channels, which can
+make the output scale depend strongly on rank. Dividing by `sqrt(128)` keeps the
+score scale controlled while retaining the low-rank interaction between
+parameters and query coordinates. It was fixed before validation; it is not
+evidence that M1 will outperform M0.
+
+**How does M1 guarantee positive IV without clipping?** The network maps its
+score through softplus to positive decimal implied volatility, then applies the
+training-only output mean and standard deviation used by the shared loss and
+inverse transform. Predictions use the same coordinates and reference-valid
+mask as M0; positivity is a model parameterization, not a post-hoc clamp that
+could conceal errors.
+
+**What can be concluded from M1's lower validation MAE?** Across seeds 11, 29,
+and 47, mean MAE was 0.016920 ± 0.006073 vol points, but the mean per-seed max
+was 1.497752 ± 0.151406 and reference failures affected 0.252625% of attempted
+quotes. Validation selected the trial and drove early stopping, so this is
+development evidence only. It does not establish a final architecture ranking
+or test/OOD performance; those remain sealed until Gate 3 final evaluation.
