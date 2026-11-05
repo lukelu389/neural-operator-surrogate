@@ -7,9 +7,12 @@ output: runs/m2_v1
 report: reports/tables/m2_validation.json
 selected_config: config/m2_selected.yaml
 figures: reports/figures/m2
-experiment_name: nop-m2-validation
-torch_threads: 1
+tracking_directory: mlruns
+experiment_name: T3.2_M2_validation
+torch_threads: 4
 device: cpu
 reporting:
-  inference_batch_size: 64
-  figure_dpi: 140
+  units: vol_points
+  aggregation: per_seed_then_arithmetic_mean_and_sample_std_ddof_1
+  inference_batch_size: 256
+  figure_dpi: 160
