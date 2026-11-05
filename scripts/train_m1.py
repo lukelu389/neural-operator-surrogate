@@ -391,11 +391,77 @@ def run(root: Path, config_path: Path, *, tune_only: bool = False) -> dict[str, 
             grid["z"][0],
             root / config["figures"],
             config["reporting"]["figure_dpi"],
+            model_label="M1",
         )
         ledger["figures"] = {str(path.relative_to(root)): sha256_file(path) for path in figures}
         write_json(ledger_path, ledger)
         write_json(root / config["report"], ledger)
         return ledger
+
+
+def regenerate_m1_figures(root: Path, config_path: Path) -> dict[str, Any]:
+    """Rebuild M1-labeled plots from verified validation artifacts without training."""
+    frozen = verify_frozen_files(root)
+    config = yaml.safe_load(config_path.read_bytes())
+    dataset = root / config["dataset"]
+    manifest = json.loads((dataset / "manifest.json").read_text())
+    evidence = frozen["evidence"]["dataset"]
+    if (
+        manifest["scope"] != "train_validation_only"
+        or set(manifest["splits"]) != {"train", "validation"}
+        or manifest["dataset_hash"] != evidence["dataset_hash"]
+        or manifest["normalization_sha256"] != sha256_file(dataset / "normalization.npz")
+        or manifest["grid_sha256"] != sha256_file(dataset / "grid.npz")
+    ):
+        raise ValueError("figure regeneration requires the verified train/validation dataset")
+
+    ledger_path = root / config["output"] / "experiment.json"
+    report_path = root / config["report"]
+    ledger: dict[str, Any] = json.loads(ledger_path.read_text())
+    if (
+        ledger.get("status") != "complete"
+        or ledger.get("identity", {}).get("model_id") != "M1"
+        or ledger["identity"].get("dataset_hash") != manifest["dataset_hash"]
+        or ledger.get("report_scope") != "validation_model_selection_data_not_independent_test"
+        or len(ledger.get("trials", [])) != 12
+        or [record.get("seed") for record in ledger.get("seeds", [])] != [11, 29, 47]
+    ):
+        raise ValueError("figure regeneration requires a complete M1 validation report")
+
+    histories: dict[str, list[dict[str, Any]]] = {}
+    for record in ledger["trials"] + ledger["seeds"]:
+        run_id = record["run_id"]
+        run_report = root / config["output"] / run_id / "report.json"
+        if sha256_file(run_report) != record["report_sha256"]:
+            raise ValueError(f"cached M1 history hash mismatch for {run_id}")
+        histories[run_id] = json.loads(run_report.read_text())["history"]
+
+    with np.load(dataset / "grid.npz", allow_pickle=False) as grid:
+        maturity = grid["maturity"][:, 0].tolist()
+        z = grid["z"][0].tolist()
+    figures = write_validation_figures(
+        ledger["accuracy"],
+        histories,
+        maturity,
+        z,
+        root / config["figures"],
+        config["reporting"]["figure_dpi"],
+        model_label="M1",
+    )
+    ledger["figures"] = {str(path.relative_to(root)): sha256_file(path) for path in figures}
+    ledger["figure_label"] = "M1"
+    if "post_training_report_update" not in ledger:
+        ledger["post_training_report_update"] = {
+            "scope": "figure_title_only",
+            "reason": "the initial M1 plot call inherited the helper's M0 default label",
+            "training_or_selection_changed": False,
+            "code_commit": current_commit(root),
+            "source_sha256": sha256_file(root / "scripts/train_m1.py"),
+        }
+    write_json(ledger_path, ledger)
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    write_json(report_path, ledger)
+    return ledger
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -404,7 +470,16 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=root / "config/m1_run.yaml")
     parser.add_argument("--tune-only", action="store_true")
+    parser.add_argument(
+        "--figures-only",
+        action="store_true",
+        help="regenerate labeled validation plots from completed caches without training",
+    )
     args = parser.parse_args(argv)
+    if args.figures_only:
+        result = regenerate_m1_figures(root, args.config)
+        print(json.dumps({"status": result["status"], "figures": result["figures"]}, indent=2))
+        return 0
     result = run(root, args.config, tune_only=args.tune_only)
     print(
         json.dumps(

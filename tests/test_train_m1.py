@@ -65,6 +65,7 @@ def test_m1_runs_all_paired_trials_before_the_three_headline_seeds(
         for i, maturity in enumerate([1 / 12, 2 / 12, 3 / 12, 6 / 12, 9 / 12, 1.0, 1.5, 2.0])
     ]
     calls: list[tuple[str, int, dict[str, Any]]] = []
+    figure_calls: list[dict[str, Any]] = []
 
     def run_one(
         root: Path,
@@ -123,7 +124,11 @@ def test_m1_runs_all_paired_trials_before_the_three_headline_seeds(
     monkeypatch.setitem(
         globals_, "validation_summary", lambda *args: {"complete": True, "split": "validation"}
     )
-    monkeypatch.setitem(globals_, "write_validation_figures", lambda *args: [])
+    monkeypatch.setitem(
+        globals_,
+        "write_validation_figures",
+        lambda *args, **kwargs: figure_calls.append(kwargs) or [],
+    )
     result = command["run"](tmp_path, config_path)
 
     assert result["status"] == "complete"
@@ -137,3 +142,4 @@ def test_m1_runs_all_paired_trials_before_the_three_headline_seeds(
     selected_config = yaml.safe_load((tmp_path / config["selected_config"]).read_text())
     assert selected_config["selected_trial_id"] == selected["trial_id"]
     assert json.loads((tmp_path / config["report"]).read_text())["status"] == "complete"
+    assert figure_calls == [{"model_label": "M1"}]
