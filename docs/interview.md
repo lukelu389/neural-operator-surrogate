@@ -245,3 +245,28 @@ was 1.497752 ± 0.151406 and reference failures affected 0.252625% of attempted
 quotes. Validation selected the trial and drove early stopping, so this is
 development evidence only. It does not establish a final architecture ranking
 or test/OOD performance; those remain sealed until Gate 3 final evaluation.
+
+## T3.2 — Transformer M2
+
+**How are continuous query coordinates represented?** Normalize forward
+log-moneyness and maturity by fixed training-grid scales, retain those two raw
+coordinates, and append sine/cosine features at four fixed frequencies. This
+lets attention distinguish nearby and periodic coordinate structure without
+learning a token index tied to the native grid. Frequencies and scales were
+fixed from the declared coordinate domain before trials.
+
+**What does bidirectional attention mean in this model?** Each input sequence
+contains five parameter tokens and the complete submitted query set. Every
+Transformer layer applies unmasked self-attention to that joint sequence, so
+parameter and query tokens can influence each other in both directions. Only
+the query positions feed the IV output. Query order is not encoded, making the
+outputs permutation-equivariant for a fixed set of query coordinates.
+
+**Does the M2 parameter budget or validation result prove architectural
+fairness or superiority?** The M2 config has 931,202 trainable parameters,
+8.09% below M0's 1,013,160, and the runner verifies that count against the
+shared ±10% limit. This checks parameter-count parity only; M2 still uses the
+same paired trial draws, optimizer family, data, and seeds. Any validation
+ranking is development evidence because selection and early stopping use that
+split; final claims require the single gated T3.4 evaluation and must include
+tail errors and failure masks.

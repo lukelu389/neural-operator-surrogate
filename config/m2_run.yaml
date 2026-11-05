@@ -1,0 +1,15 @@
+model_id: M2
+model_config: config/m2.yaml
+training_policy: config/training.yaml
+evaluation_protocol: config/eval_protocol.yaml
+dataset: data/heston_v1
+output: runs/m2_v1
+report: reports/tables/m2_validation.json
+selected_config: config/m2_selected.yaml
+figures: reports/figures/m2
+experiment_name: nop-m2-validation
+torch_threads: 1
+device: cpu
+reporting:
+  inference_batch_size: 64
+  figure_dpi: 140

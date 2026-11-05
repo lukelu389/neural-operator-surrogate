@@ -5,8 +5,18 @@
 [training.yaml](training.yaml), [diagnostics.yaml](diagnostics.yaml), and
 [calibration.yaml](calibration.yaml) complete the shared budgets and numerical
 policies. See the [freeze record](../docs/protocol-freeze.md) for verification,
-metadata migration, and remaining gate restrictions. No models or holdouts have
-been evaluated at this stage.
+metadata migration, and remaining gate restrictions. Model configurations and
+selected checkpoints remain unfrozen until T3.4; no test/OOD data informs these
+choices.
+
+`m0.yaml` through `m2.yaml` hold fixed architectures, each committed before its
+first tuning trial. M2's continuous query encoding uses normalized raw
+coordinates plus sine/cosine Fourier features at 1, 2, 4, and 8 cycles. It
+applies full bidirectional attention jointly to the five parameter tokens and
+the complete submitted query set, then reads only query-token outputs. The
+model is permutation-equivariant over that set; compare coordinates using the
+same query set. Run the M2 validation budget with
+`.venv/bin/python scripts/train_m2.py`.
 
 [heston_numerics.yaml](heston_numerics.yaml) configures T1.2's reproducible COS
 convergence and Monte Carlo checks. It contains explicit numerical fixtures,

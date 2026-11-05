@@ -200,6 +200,12 @@
 - Correct the M1-only plot label after discovering that its first static figures inherited the shared helper's default M0 title. Regenerate from the stored validation histories, retain the original training source identity, and record the correction separately in the validation report. Checkpoint, prediction, trial selection, metrics, and MLflow records are unchanged; the report-only command is `.venv/bin/python scripts/train_m1.py --figures-only`.
 - Keep generated figures, reports, predictions, checkpoints, and MLflow artifacts out of Git. Commit the selected M1 configuration, concise result record, artifact hashes, and interview answers. T3.2 is next; test/OOD remain sealed until T3.4.
 
+## 2026-11-05 — T3.2 M2 architecture before validation
+
+- Fix M2 as a 7-layer, width-128, four-head bidirectional Transformer with 256-wide GELU feed-forward blocks. Its 931,202 trainable parameters are 8.09% below M0, within the frozen 10% comparison budget; count and budget are checked before each run.
+- Represent each of five standardized Heston parameters as a value token plus learned parameter identity. Represent query coordinates with normalized raw `(k,T)` and fixed sine/cosine Fourier features at 1, 2, 4, and 8 cycles, then apply full self-attention jointly over all parameter and submitted query tokens. Read outputs only at query positions; predictions are permutation-equivariant over a fixed query set.
+- Reuse M0/M1's training-only coordinate moments, positive decimal-IV softplus parameterization, reference masks, shared optimizer/schedule, exact paired twelve-draw budget, and three declared seeds. Do not change these choices after validation begins; no test/OOD access is authorized before T3.4.
+
 ### Implementation verification before production
 
 - `make check` passed Ruff, strict mypy (40 source files), and 783 tests; one CUDA test was skipped. Synthetic integration checks verify all twelve trials precede selection, stop conditions prevent new seed runs, failed seeds are not replaced, and aggregates use all three required seeds.

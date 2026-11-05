@@ -114,6 +114,10 @@ One ticket per session. Tick when the exit criteria in PLAN.md are met. Add hand
 - [ ] T3.2 M2 Transformer
   - Done when: trained with the same tuning budget
   - Handoff notes:
+    - 2026-11-05 implementation: fixed M2 before production as a 7-layer, width-128, four-head bidirectional Transformer with 256-wide GELU blocks and fixed continuous raw/Fourier coordinate features. It has 931,202 trainable parameters, 8.09% below M0; the model constructor and runner verify its count and budget.
+    - `scripts/train_m2.py` uses the same verified train/validation data, frozen AdamW schedule, exact paired twelve-trial draws, trial-failure accounting, three selected-config seeds, local MLflow, resumable checkpoints, and validation-only reports. Run `.venv/bin/python scripts/train_m2.py`; repeat the same command to resume. `--tune-only` stops after the twelve trials.
+    - Model tests cover native/arbitrary query shapes, permutation equivariance, coordinate/parameter gradients, positive-IV output, normalization buffers, invalid inputs, exact parameter count, and the ±10% M0 budget. Synthetic runner coverage verifies all twelve trials precede the three seeds and selected hyperparameters are reused.
+    - Preproduction `make check` passed Ruff, strict mypy (44 sources), and 800 tests; one CUDA check was skipped. All eight frozen hashes verify. Production trials have not started and no M2 validation score has been observed.
 - [ ] T3.3 M3 SSM (bidirectional or two-pass, documented)
   - Done when: trained with the same tuning budget
   - Handoff notes:

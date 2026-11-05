@@ -1,0 +1,31 @@
+# Fixed by parameter arithmetic and shape/permutation checks before any M2 trial.
+version: 1
+model_id: M2
+architecture: bidirectional_transformer_parameter_and_query_tokens
+parameter_tokens: 5
+model_width: 128
+attention_heads: 4
+layer_count: 7
+feedforward_width: 256
+activation: GELU
+dropout: 0.0
+normalization: post_layernorm
+initialization: torch_linear_default_seeded
+coordinate_encoding:
+  type: normalized_raw_plus_fixed_fourier
+  k_scale: 0.7071067811865476
+  maturity_years_scale: 2.0
+  frequencies_cycles: [1, 2, 4, 8]
+query_set:
+  native_grid_shape: [8, 15]
+  attention: full_bidirectional_over_all_parameter_and_query_tokens
+  output: query_tokens_only
+  permutation_equivariance: true
+parameter_count: 931202
+nominal_parameters: 1000000
+parameter_budget_relative_to_M0: -0.0808934422993407
+output:
+  positive_decimal_iv: softplus
+  standardization: training_coordinate_moments_bilinear_mean_log_std
+  normalization_k_scale: 0.2
+  clipping: none
